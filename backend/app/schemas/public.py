@@ -5,6 +5,7 @@ logging in, so the payload is deliberately small and self-contained.
 """
 
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -16,7 +17,7 @@ _EMAIL_RE = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 class VisitRequestCreate(BaseModel):
     structure_name: str = Field(..., min_length=1, max_length=200)
     city: str | None = Field(None, max_length=200)
-    business_type: str | None = Field(None, max_length=100)
+    business_type: Literal["bnb_hotel", "private_host", "property_manager"] | None = None
     contact_name: str = Field(..., min_length=1, max_length=200)
     contact_email: str = Field(..., pattern=_EMAIL_RE, max_length=320)
     preferred_date: date | None = None

@@ -64,8 +64,16 @@ def delete_avatar_file(avatar_path: str | None) -> None:
     """Best-effort removal of a previously saved avatar file. Never raises."""
     if not avatar_path:
         return
-    filename = avatar_path.rsplit("/", 1)[-1]
+    filename = Path(avatar_path).name
+    if not filename:
+        return
     try:
-        (AVATAR_DIR / filename).unlink()
+        avatar_dir = AVATAR_DIR.resolve(strict=False)
+        candidate = (AVATAR_DIR / filename).resolve(strict=False)
+        # Only allow deletions inside the avatar directory even if the stored
+        # path is tampered with.
+        if candidate.parent != avatar_dir:
+            return
+        candidate.unlink()
     except OSError:
         pass

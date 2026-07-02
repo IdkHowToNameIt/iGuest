@@ -31,6 +31,7 @@ const Chevron = ({ size = 18 }) => (
 
 function FeatureIcon({ featureKey }) {
   const tone = FEATURE_TONE[featureKey] || FEATURE_TONE.lang
+  const nodes = FEATURE_ICON[featureKey] || []
   return (
     <svg
       width="22"
@@ -41,8 +42,15 @@ function FeatureIcon({ featureKey }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      dangerouslySetInnerHTML={{ __html: FEATURE_ICON[featureKey] }}
-    />
+    >
+      {nodes.map((node, idx) =>
+        node.type === 'circle' ? (
+          <circle key={idx} cx={node.cx} cy={node.cy} r={node.r} />
+        ) : (
+          <path key={idx} d={node.d} />
+        ),
+      )}
+    </svg>
   )
 }
 

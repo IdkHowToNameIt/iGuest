@@ -189,6 +189,21 @@ def test_upload_invalid_scope_422():
     assert r.status_code == 422
 
 
+def test_upload_document_too_large_413(monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "max_document_upload_bytes", 4)
+    fake_structure = type("S", (), {"id": uuid.uuid4()})()
+    override_db(FakeDB(get_value=fake_structure))
+    r = client.post(
+        "/api/admin/documents",
+        headers=auth_header(),
+        data={"scope_type": "structure", "target_id": str(uuid.uuid4())},
+        files={"file": ("test.txt", b"way-too-big", "text/plain")},
+    )
+    assert r.status_code == 413
+
+
 # ── admin profile / avatar / stats ────────────────────────────────────────────────
 
 def test_stats_protected():

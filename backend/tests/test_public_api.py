@@ -87,3 +87,12 @@ def test_submit_visit_request_bad_email_422():
         json={**VALID, "contact_email": "not-an-email"},
     )
     assert r.status_code == 422
+
+
+def test_submit_visit_request_bad_business_type_422():
+    override_db(FakeDB())
+    r = client.post(
+        "/api/public/visit-requests",
+        json={**VALID, "business_type": "other"},
+    )
+    assert r.status_code == 422

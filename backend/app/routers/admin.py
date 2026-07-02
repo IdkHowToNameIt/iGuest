@@ -94,10 +94,11 @@ from app.schemas.admin import (
 )
 from app.services.admin_documents import create_and_ingest_document
 from app.services.auth import AuthError, authenticate_admin, create_access_token
-from app.services.avatars import AvatarError, delete_avatar_file, save_avatar
+from app.services.avatars import AvatarError, MAX_UPLOAD_BYTES, delete_avatar_file, save_avatar
 from app.services.faq import build_global_analytics, build_unit_analytics
 from app.services.links import create_guest_link, delete_link
 from app.services.passwords import generate_temp_password, hash_password, verify_password
+from app.services.uploads import UploadTooLargeError, read_upload_limited
 
 # ── login (unprotected) ────────────────────────────────────────────────────────
 
@@ -262,7 +263,14 @@ def upload_document(
     else:
         raise HTTPException(status_code=422, detail="scope_type must be 'structure' or 'unit'.")
 
-    content = file.file.read()
+    try:
+        content = read_upload_limited(
+            file.file,
+            max_bytes=settings.max_document_upload_bytes,
+            label="Document",
+        )
+    except UploadTooLargeError as exc:
+        raise HTTPException(status_code=413, detail=str(exc))
     document = create_and_ingest_document(
         db, scope_type, structure_id, unit_id, file.filename, content
     )
@@ -677,7 +685,10 @@ def update_profile(body: AdminProfileUpdate, db: Session = Depends(get_db)):
 @router.post("/profile/avatar", response_model=AdminProfileOut)
 def upload_profile_avatar(file: UploadFile = File(...), db: Session = Depends(get_db)):
     profile = _get_or_create_profile(db)
-    content = file.file.read()
+    try:
+        content = read_upload_limited(file.file, max_bytes=MAX_UPLOAD_BYTES, label="Image")
+    except UploadTooLargeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     try:
         new_path = save_avatar(content, file.content_type or "")
     except AvatarError as exc:

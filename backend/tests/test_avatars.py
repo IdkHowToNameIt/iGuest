@@ -69,3 +69,9 @@ class TestDeleteAvatarFile:
 
     def test_none_does_not_raise(self):
         delete_avatar_file(None)
+
+    def test_ignores_path_traversal(self, tmp_path):
+        outside = tmp_path.parent / "outside.txt"
+        outside.write_bytes(b"x")
+        delete_avatar_file("/uploads/avatars/..\\..\\outside.txt")
+        assert outside.exists()

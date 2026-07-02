@@ -46,7 +46,7 @@ from app.schemas.host import (
     HostTokenResponse,
     HostUnitOut,
 )
-from app.services.avatars import AvatarError, delete_avatar_file, save_avatar
+from app.services.avatars import AvatarError, MAX_UPLOAD_BYTES, delete_avatar_file, save_avatar
 from app.services.faq import build_structure_analytics, build_unit_analytics, list_structure_faqs
 from app.services.host_auth import (
     HostAuthError,
@@ -55,6 +55,7 @@ from app.services.host_auth import (
     hash_password,
     verify_password,
 )
+from app.services.uploads import UploadTooLargeError, read_upload_limited
 
 # ── login (unprotected) ────────────────────────────────────────────────────────
 
@@ -119,7 +120,10 @@ def get_me(host: Host = Depends(require_host), db: Session = Depends(get_db)):
 def upload_avatar(
     file: UploadFile = File(...), host: Host = Depends(require_host), db: Session = Depends(get_db)
 ):
-    content = file.file.read()
+    try:
+        content = read_upload_limited(file.file, max_bytes=MAX_UPLOAD_BYTES, label="Image")
+    except UploadTooLargeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     try:
         new_path = save_avatar(content, file.content_type or "")
     except AvatarError as exc:
