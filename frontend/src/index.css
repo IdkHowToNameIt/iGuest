@@ -1,15 +1,17 @@
 :root {
-  --text: #44414a;
+  --text: #4b4956;
   --text-muted: #8a8693;
-  --text-h: #08060d;
-  --bg: #ffffff;
-  --bg-soft: #f5f4f7;
-  --sidebar-bg: #ffffff;
-  --border: #e5e4e7;
+  --text-h: #14121c;
+  --bg: #f3f4fa;
+  --bg-soft: #ffffff;
+  --border: #e6e6ef;
   --accent: #6b3bff;
+  --accent-strong: #5b2bee;
   --accent-text: #ffffff;
   --accent-soft: #f1ecff;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --accent-gradient: linear-gradient(120deg, #6b3bff, #9d66ff);
+  --shadow: 0 1px 2px rgba(20, 18, 40, 0.04), 0 4px 14px rgba(20, 18, 40, 0.05);
+  --shadow-lift: 0 6px 22px rgba(20, 18, 40, 0.1);
   --bubble-guest: #6b3bff;
   --bubble-guest-text: #ffffff;
   --bubble-assistant: #f0eef4;
@@ -17,14 +19,33 @@
   --error: #c0392b;
   --error-soft: #fdecea;
 
-  /* Secondary accent (icon chips, dashboard widgets) + shared layout tokens
-     for the admin/host panel shell. */
-  --accent-2: #2fb8a8;
-  --accent-2-soft: #e3f7f4;
-  --card-radius: 16px;
-  --shell-max-width: 1440px;
+  /* Content-area background wash (recreates the soft wavy texture of the
+     design concept with pure CSS, no image asset). */
+  --bg-wash:
+    radial-gradient(900px 420px at 85% -10%, rgba(107, 59, 255, 0.07), transparent 60%),
+    radial-gradient(700px 380px at -10% 108%, rgba(47, 184, 168, 0.06), transparent 60%);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Sidebar is always dark navy, in both themes (see the admin concept). */
+  --sidebar-bg: #0d0e1e;
+  --sidebar-bg-2: #141632;
+  --sidebar-text: #a7abc4;
+  --sidebar-text-h: #f5f6ff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+
+  /* Icon-chip tones for stat cards and activity feeds (concept: one hue per
+     metric). tone-1 = purple accent, then teal / blue / orange. */
+  --accent-2: #14a08f;
+  --accent-2-soft: #e0f5f2;
+  --tone-3: #2f6fed;
+  --tone-3-soft: #e8effd;
+  --tone-4: #e07c1f;
+  --tone-4-soft: #fdf0e0;
+
+  --card-radius: 16px;
+  --shell-max-width: 1600px;
+
+  --sans: 'Segoe UI', system-ui, Roboto, sans-serif;
 
   font: 16px/1.45 var(--sans);
   color: var(--text);
@@ -38,17 +59,19 @@
    before first paint, by an inline script in index.html) — not a media query,
    so the choice can be overridden manually via the theme toggle. */
 [data-theme='dark'] {
-  --text: #c9c6d0;
-  --text-muted: #8e8a97;
-  --text-h: #f3f4f6;
-  --bg: #16171d;
-  --bg-soft: #1f2028;
-  --sidebar-bg: #0e0f14;
-  --border: #2e303a;
-  --accent: #a07bff;
+  --text: #b9b6c6;
+  --text-muted: #837f92;
+  --text-h: #f4f3f8;
+  --bg: #12131c;
+  --bg-soft: #1a1c29;
+  --border: #2b2d3d;
+  --accent: #9d70ff;
+  --accent-strong: #8a55ff;
   --accent-text: #ffffff;
-  --accent-soft: rgba(160, 123, 255, 0.16);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --accent-soft: rgba(157, 112, 255, 0.16);
+  --accent-gradient: linear-gradient(120deg, #6b3bff, #9d66ff);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 8px 26px rgba(0, 0, 0, 0.5);
   --bubble-guest: #6b3bff;
   --bubble-guest-text: #ffffff;
   --bubble-assistant: #262732;
@@ -56,8 +79,23 @@
   --error: #ff6b5e;
   --error-soft: rgba(255, 107, 94, 0.14);
 
-  --accent-2: #5fd6c6;
-  --accent-2-soft: rgba(95, 214, 198, 0.14);
+  --bg-wash:
+    radial-gradient(900px 420px at 85% -10%, rgba(120, 80, 255, 0.1), transparent 60%),
+    radial-gradient(700px 380px at -10% 108%, rgba(60, 200, 185, 0.05), transparent 60%);
+
+  --sidebar-bg: #0a0b16;
+  --sidebar-bg-2: #111330;
+  --sidebar-text: #9599b4;
+  --sidebar-text-h: #f5f6ff;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+
+  --accent-2: #4fd3c2;
+  --accent-2-soft: rgba(79, 211, 194, 0.14);
+  --tone-3: #6f9dff;
+  --tone-3-soft: rgba(111, 157, 255, 0.15);
+  --tone-4: #f0a04e;
+  --tone-4-soft: rgba(240, 160, 78, 0.15);
   color-scheme: dark;
 }
 
@@ -90,4 +128,10 @@ p {
 button {
   font-family: inherit;
   cursor: pointer;
+}
+
+/* Inline SVG icons (components/Icon.jsx) align with the text around them. */
+.icon {
+  vertical-align: -0.18em;
+  flex: 0 0 auto;
 }

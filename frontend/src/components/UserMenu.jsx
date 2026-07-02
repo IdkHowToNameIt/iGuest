@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from './Avatar.jsx'
+import Icon from './Icon.jsx'
 
 // Topbar avatar dropdown: profile name/email, a link to profile settings, and
 // log out. Mirrors ThemeToggle's open/close-on-outside-click pattern.
@@ -36,11 +37,11 @@ export default function UserMenu({ name, email, avatarUrl, settingsPath, onLogou
           </div>
           {settingsPath && (
             <Link className="user-menu-item" to={settingsPath} onClick={() => setOpen(false)}>
-              👤 Profile settings
+              <Icon name="user" size={16} /> Profile settings
             </Link>
           )}
           <button type="button" className="user-menu-item" onClick={onLogout}>
-            ⏻ Log out
+            <Icon name="power" size={16} /> Log out
           </button>
         </div>
       )}

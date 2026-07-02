@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getOpening, getHistory, getFaqs, sendMessage, ApiError } from '../api.js'
+import Icon from '../components/Icon.jsx'
 import '../chat.css'
 
 // Friendly copy for each link-error code. The guest sees a clean screen instead
 // of a raw HTTP error.
 const ERROR_COPY = {
-  not_found: { icon: '🔗', title: 'Link not found', text: 'This link is not valid. Please ask your host for a new one.' },
-  revoked: { icon: '🚫', title: 'Link revoked', text: 'This link has been disabled by the host.' },
-  expired: { icon: '⌛', title: 'Link expired', text: 'This link is no longer valid. Please ask your host for a new one.' },
-  not_yet_valid: { icon: '🕓', title: 'Not active yet', text: 'This link is not active yet. Please try again later.' },
-  network: { icon: '📡', title: 'Connection problem', text: 'We could not reach the server. Check your connection and try again.' },
-  busy: { icon: '⏳', title: 'Assistant busy', text: 'The assistant is momentarily busy. Please try again in a few moments.' },
-  server: { icon: '⚠️', title: 'Something went wrong', text: 'An unexpected error occurred. Please try again in a moment.' },
+  not_found: { icon: 'link', title: 'Link not found', text: 'This link is not valid. Please ask your host for a new one.' },
+  revoked: { icon: 'ban', title: 'Link revoked', text: 'This link has been disabled by the host.' },
+  expired: { icon: 'hourglass', title: 'Link expired', text: 'This link is no longer valid. Please ask your host for a new one.' },
+  not_yet_valid: { icon: 'clock', title: 'Not active yet', text: 'This link is not active yet. Please try again later.' },
+  network: { icon: 'wifi-off', title: 'Connection problem', text: 'We could not reach the server. Check your connection and try again.' },
+  busy: { icon: 'clock', title: 'Assistant busy', text: 'The assistant is momentarily busy. Please try again in a few moments.' },
+  server: { icon: 'alert-triangle', title: 'Something went wrong', text: 'An unexpected error occurred. Please try again in a moment.' },
 }
 
 function CenteredError({ code }) {
@@ -20,7 +21,9 @@ function CenteredError({ code }) {
   return (
     <div className="screen-center">
       <div className="error-card">
-        <div className="error-icon">{copy.icon}</div>
+        <div className="error-icon">
+          <Icon name={copy.icon} size={26} />
+        </div>
         <h2>{copy.title}</h2>
         <p>{copy.text}</p>
       </div>

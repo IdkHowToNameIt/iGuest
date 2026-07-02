@@ -2,6 +2,7 @@ import { useState } from 'react'
 import GridLayout, { WidthProvider } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
+import Icon from './Icon.jsx'
 
 const ResponsiveGrid = WidthProvider(GridLayout)
 
@@ -66,8 +67,14 @@ export default function DashboardGrid({
       margin={[16, 16]}
     >
       {blocks.map((b) => (
-        <div key={b.key} className="widget-card">
-          {editing && <div className="widget-card-handle">⠿ {b.title}</div>}
+        // `bare` blocks skip the card chrome: their content brings its own
+        // surfaces (e.g. the stat-card row or the gradient promo card).
+        <div key={b.key} className={`widget-card${b.bare ? ' widget-bare' : ''}`}>
+          {editing && (
+            <div className="widget-card-handle">
+              <Icon name="grip" size={14} /> {b.title}
+            </div>
+          )}
           {b.content}
         </div>
       ))}

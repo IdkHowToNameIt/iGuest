@@ -15,6 +15,7 @@ import {
 import { useHostAuth } from '../hostAuth.jsx'
 import DocumentText from '../../components/DocumentText.jsx'
 import Avatar from '../../components/Avatar.jsx'
+import Icon from '../../components/Icon.jsx'
 import DashboardGrid, { resetLayout } from '../../components/DashboardGrid.jsx'
 
 function statusBadge(status) {
@@ -260,9 +261,8 @@ export default function HostDashboardPage() {
             <div className="row" style={{ border: 'none', padding: 0, background: 'transparent' }}>
               <div className="row-main">
                 <span className="row-title">
-                  {r.document_id
-                    ? '📄 Document request'
-                    : `❓ ${r.title || 'Other'}`}
+                  <Icon name={r.document_id ? 'file-text' : 'help-circle'} size={15} />{' '}
+                  {r.document_id ? 'Document request' : r.title || 'Other'}
                 </span>
                 <span className="row-sub">{new Date(r.created_at).toLocaleString()}</span>
               </div>
@@ -383,7 +383,9 @@ export default function HostDashboardPage() {
                           {cat.count} question(s) · {Math.round(cat.share * 100)}%
                         </span>
                       </div>
-                      <span className="muted">{openCategory === cat.label ? '▾' : '▸'}</span>
+                      <span className="muted">
+                        <Icon name={openCategory === cat.label ? 'chevron-down' : 'chevron-right'} size={16} />
+                      </span>
                     </button>
                     {openCategory === cat.label && (
                       <ul className="list" style={{ marginTop: 8 }}>
@@ -463,14 +465,14 @@ export default function HostDashboardPage() {
             className="btn btn-ghost btn-sm"
             onClick={() => setOpenInProgress((v) => !v)}
           >
-            {openInProgress ? '▾' : '▸'} In progress ({openRequests.length})
+            <Icon name={openInProgress ? 'chevron-down' : 'chevron-right'} size={14} /> In progress ({openRequests.length})
           </button>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => setOpenResolved((v) => !v)}
           >
-            {openResolved ? '▾' : '▸'} Resolved ({resolvedRequests.length})
+            <Icon name={openResolved ? 'chevron-down' : 'chevron-right'} size={14} /> Resolved ({resolvedRequests.length})
           </button>
         </div>
         {openInProgress && (
@@ -502,10 +504,11 @@ export default function HostDashboardPage() {
             className={`btn btn-sm${customizing ? '' : ' btn-ghost'}`}
             onClick={() => setCustomizing((v) => !v)}
           >
-            {customizing ? '✓ Done arranging' : '⠿ Customize layout'}
+            <Icon name={customizing ? 'check' : 'grip'} size={14} />{' '}
+            {customizing ? 'Done arranging' : 'Customize layout'}
           </button>
           <button className="btn btn-ghost btn-sm" onClick={() => setShowSettings((v) => !v)}>
-            ⚙ Settings
+            <Icon name="settings" size={14} /> Settings
           </button>
         </div>
       </div>
@@ -517,27 +520,47 @@ export default function HostDashboardPage() {
 
       <div className="stat-grid">
         <div className="stat-card">
-          <span className="stat-card-label">Documents</span>
+          <div className="stat-card-top">
+            <span className="stat-card-label">Documents</span>
+            <span className="chip">
+              <Icon name="file-text" size={19} />
+            </span>
+          </div>
           <span className="stat-card-value">{documents.length}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-card-label">FAQ entries</span>
+          <div className="stat-card-top">
+            <span className="stat-card-label">FAQ entries</span>
+            <span className="chip tone-2">
+              <Icon name="help-circle" size={19} />
+            </span>
+          </div>
           <span className="stat-card-value">{faqs.length}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-card-label">Guest questions</span>
+          <div className="stat-card-top">
+            <span className="stat-card-label">Guest questions</span>
+            <span className="chip tone-3">
+              <Icon name="message-circle" size={19} />
+            </span>
+          </div>
           <span className="stat-card-value">{analytics?.total || 0}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-card-label">Open requests</span>
+          <div className="stat-card-top">
+            <span className="stat-card-label">Open requests</span>
+            <span className="chip tone-4">
+              <Icon name="clipboard" size={19} />
+            </span>
+          </div>
           <span className="stat-card-value">{openRequests.length}</span>
         </div>
       </div>
 
       {notifications.length > 0 && (
         <div className="notif-banner">
-          <span>
-            🔔 {notifications.length} request(s) resolved:{' '}
+          <span className="notif-banner-text">
+            <Icon name="bell" size={16} /> {notifications.length} request(s) resolved:{' '}
             {notifications.map((r) => (r.document_id ? 'document request' : r.title || 'other')).join(', ')}
           </span>
           <button className="btn btn-ghost btn-sm" onClick={() => setNotifications([])}>

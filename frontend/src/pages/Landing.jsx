@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Icon from '../components/Icon.jsx'
 import '../chat.css'
 
 // Fallback page for any unmatched route (including the bare "/"). Guests reach
@@ -8,7 +9,9 @@ export default function Landing() {
   return (
     <div className="screen-center">
       <div className="error-card">
-        <div className="error-icon">🏠</div>
+        <div className="error-icon">
+          <Icon name="home" size={26} />
+        </div>
         <h2>GuestReply</h2>
         <p>
           This is the guest assistant for short-term rentals. Guests access it

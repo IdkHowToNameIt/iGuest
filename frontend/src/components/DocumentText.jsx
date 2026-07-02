@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Icon from './Icon.jsx'
 
 // A "View text" toggle for a document. `fetchContent(id)` returns
 // { extracted_text, ... } from whichever API client the caller uses (admin or
@@ -56,7 +57,7 @@ function DocModal({ title, loading, error, content, onClose }) {
         <div className="doc-modal-head">
           <h2>{title}</h2>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>
-            ✕ Close
+            <Icon name="x" size={14} /> Close
           </button>
         </div>
         <div className="doc-modal-body">

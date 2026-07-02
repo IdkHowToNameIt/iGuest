@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BACKEND_URL } from '../backendUrl.js'
+import Icon from './Icon.jsx'
 
 function initialsOf(name) {
   const trimmed = (name || '').trim()
@@ -25,7 +26,7 @@ function Lightbox({ src, onClose }) {
   return (
     <div className="lightbox-backdrop" onClick={onClose}>
       <button type="button" className="lightbox-close" onClick={onClose} aria-label="Close">
-        ✕
+        <Icon name="x" size={18} />
       </button>
       <img className="lightbox-img" src={src} alt="" onClick={(e) => e.stopPropagation()} />
     </div>

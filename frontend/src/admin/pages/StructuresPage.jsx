@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { listStructures, createStructure } from '../adminApi.js'
 import { useAuth } from '../auth.jsx'
 import GeoSelect from '../../components/GeoSelect.jsx'
+import Icon from '../../components/Icon.jsx'
 
 const EMPTY_GEO = { region: '', province: '', city: '' }
 const EMPTY_FORM = {
@@ -228,7 +229,9 @@ export default function StructuresPage() {
                 <Link className="structure-card-title" to={`/admin/structures/${s.id}`}>{s.name}</Link>
                 <span className="badge">{s.country_language}</span>
               </div>
-              <div className="structure-card-loc">📍 {locationLine(s)}</div>
+              <div className="structure-card-loc">
+                <Icon name="map-pin" size={14} /> {locationLine(s)}
+              </div>
 
               <div className="structure-card-contacts">
                 <span className="row-sub">Owner (guests): {s.owner_contact}</span>

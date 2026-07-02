@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
+import Icon from '../../components/Icon.jsx'
 import '../admin.css'
 
 export default function LoginPage() {
@@ -33,36 +34,59 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-screen">
-      <form className="card login-card form" onSubmit={handleSubmit}>
-        <h2>Admin sign in</h2>
-        <div className="form-row">
-          <label htmlFor="username">Username</label>
-          <input
-            id="username"
-            className="input"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoFocus
-            autoComplete="username"
-          />
+    <div className="auth-screen">
+      <div className="auth-hero">
+        <div className="auth-hero-brand">
+          <span className="brand-mark">
+            <Icon name="home" size={20} />
+          </span>
+          <div>
+            <div className="sidebar-brand-name">GuestReply</div>
+            <div className="sidebar-brand-sub">Admin panel</div>
+          </div>
         </div>
-        <div className="form-row">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            className="input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
+        <div>
+          <div className="auth-hero-title">Run every property from one place.</div>
+          <p className="auth-hero-text">
+            Manage structures, units and digital manuals, hand out guest links, and keep an
+            eye on what your guests are asking — all from this panel.
+          </p>
         </div>
-        {error && <p className="error-text">{error}</p>}
-        <button className="btn" type="submit" disabled={busy || !username || !password}>
-          {busy ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+        <div className="auth-hero-foot">Multilingual guest assistant for short-term rentals</div>
+      </div>
+
+      <div className="auth-form-side">
+        <form className="card auth-card form" onSubmit={handleSubmit}>
+          <h2>Admin sign in</h2>
+          <p className="auth-card-sub">Welcome back — enter your credentials to continue.</p>
+          <div className="form-row">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              className="input"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoFocus
+              autoComplete="username"
+            />
+          </div>
+          <div className="form-row">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </div>
+          {error && <p className="error-text">{error}</p>}
+          <button className="btn" type="submit" disabled={busy || !username || !password}>
+            {busy ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

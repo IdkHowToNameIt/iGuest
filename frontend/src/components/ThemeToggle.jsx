@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { getThemePreference, setThemePreference } from '../theme.js'
+import Icon from './Icon.jsx'
 
 const OPTIONS = [
-  { value: 'light', label: 'Light', icon: '☀️' },
-  { value: 'dark', label: 'Dark', icon: '🌙' },
-  { value: 'system', label: 'System', icon: '🖥️' },
+  { value: 'light', label: 'Light', icon: 'sun' },
+  { value: 'dark', label: 'Dark', icon: 'moon' },
+  { value: 'system', label: 'System', icon: 'monitor' },
 ]
 
 // Small collapsible menu to switch between light/dark/system theme. The choice
@@ -39,7 +40,7 @@ export default function ThemeToggle() {
         aria-label="Change theme"
         aria-expanded={open}
       >
-        <span>{current.icon}</span>
+        <Icon name={current.icon} size={17} />
       </button>
       {open && (
         <div className="theme-toggle-menu" role="menu">
@@ -52,7 +53,7 @@ export default function ThemeToggle() {
               className={`theme-toggle-option${o.value === pref ? ' active' : ''}`}
               onClick={() => choose(o.value)}
             >
-              <span>{o.icon}</span> {o.label}
+              <Icon name={o.icon} size={16} /> {o.label}
             </button>
           ))}
         </div>

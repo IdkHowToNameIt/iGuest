@@ -2,20 +2,21 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import { getProfile } from './adminApi.js'
+import Icon from '../components/Icon.jsx'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 import UserMenu from '../components/UserMenu.jsx'
 import './admin.css'
 
 const NAV = [
-  { to: '/admin', label: 'Dashboard', icon: '📊', end: true },
-  { to: '/admin/structures', label: 'Structures', icon: '🏢', end: false },
-  { to: '/admin/change-requests', label: 'Change requests', icon: '📝', end: false },
-  { to: '/admin/accounts', label: 'Admin accounts', icon: '👤', end: false },
+  { to: '/admin', label: 'Dashboard', icon: 'dashboard', end: true },
+  { to: '/admin/structures', label: 'Structures', icon: 'building', end: false },
+  { to: '/admin/change-requests', label: 'Change requests', icon: 'clipboard', end: false },
+  { to: '/admin/accounts', label: 'Admin accounts', icon: 'users', end: false },
 ]
 
-// Shell around every authenticated admin page: a sidebar (brand + nav + logout)
-// and a topbar (search, notifications, account menu), with an <Outlet /> for
-// the matched page.
+// Shell around every authenticated admin page: a dark navy sidebar (brand +
+// nav + logout) and a light topbar (theme + account menu), with an <Outlet />
+// for the matched page.
 export default function AdminLayout() {
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -38,10 +39,12 @@ export default function AdminLayout() {
     <div className="shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <span className="sidebar-brand-icon">🏠</span>
+          <span className="brand-mark">
+            <Icon name="home" size={20} />
+          </span>
           <div>
             <div className="sidebar-brand-name">GuestReply</div>
-            <div className="sidebar-brand-sub">Admin</div>
+            <div className="sidebar-brand-sub">Admin panel</div>
           </div>
         </div>
         <nav className="sidebar-nav">
@@ -52,14 +55,16 @@ export default function AdminLayout() {
               end={item.end}
               className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
             >
-              <span className="sidebar-link-icon">{item.icon}</span>
+              <span className="sidebar-link-icon">
+                <Icon name={item.icon} size={18} />
+              </span>
               <span className="sidebar-link-label">{item.label}</span>
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-footer">
-          <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
-            ⏻ Log out
+          <button className="btn btn-sm" onClick={handleLogout}>
+            <Icon name="power" size={15} /> <span className="sidebar-link-label">Log out</span>
           </button>
         </div>
       </aside>
@@ -68,9 +73,6 @@ export default function AdminLayout() {
         <header className="topbar">
           <span className="topbar-title">Admin panel</span>
           <div className="topbar-actions">
-            <button type="button" className="icon-btn" aria-label="Notifications">
-              🔔
-            </button>
             <ThemeToggle />
             <UserMenu
               name={profile?.display_name || 'Admin'}
