@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  // Already signed in → skip the form.
+  // Already signed in â†’ skip the form.
   if (isAuthenticated) return <Navigate to={from} replace />
 
   async function handleSubmit(e) {
@@ -41,7 +41,7 @@ export default function LoginPage() {
             <Icon name="home" size={20} />
           </span>
           <div>
-            <div className="sidebar-brand-name">GuestReply</div>
+            <div className="sidebar-brand-name">iGuest</div>
             <div className="sidebar-brand-sub">Admin panel</div>
           </div>
         </div>
@@ -49,7 +49,7 @@ export default function LoginPage() {
           <div className="auth-hero-title">Run every property from one place.</div>
           <p className="auth-hero-text">
             Manage structures, units and digital manuals, hand out guest links, and keep an
-            eye on what your guests are asking — all from this panel.
+            eye on what your guests are asking â€” all from this panel.
           </p>
         </div>
         <div className="auth-hero-foot">Multilingual guest assistant for short-term rentals</div>
@@ -58,7 +58,7 @@ export default function LoginPage() {
       <div className="auth-form-side">
         <form className="card auth-card form" onSubmit={handleSubmit}>
           <h2>Admin sign in</h2>
-          <p className="auth-card-sub">Welcome back — enter your credentials to continue.</p>
+          <p className="auth-card-sub">Welcome back â€” enter your credentials to continue.</p>
           <div className="form-row">
             <label htmlFor="username">Username</label>
             <input
@@ -83,7 +83,7 @@ export default function LoginPage() {
           </div>
           {error && <p className="error-text">{error}</p>}
           <button className="btn" type="submit" disabled={busy || !username || !password}>
-            {busy ? 'Signing in…' : 'Sign in'}
+            {busy ? 'Signing inâ€¦' : 'Sign in'}
           </button>
         </form>
       </div>

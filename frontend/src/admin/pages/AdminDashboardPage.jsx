@@ -5,7 +5,7 @@ import { useAuth } from '../auth.jsx'
 import Icon from '../../components/Icon.jsx'
 import DashboardGrid, { resetLayout } from '../../components/DashboardGrid.jsx'
 
-const LAYOUT_KEY = 'guestreply_admin_dashboard_layout_v2'
+const LAYOUT_KEY = 'iguest_admin_dashboard_layout_v2'
 const DEFAULT_LAYOUT = [
   { i: 'overview', x: 0, y: 0, w: 12, h: 3 },
   { i: 'recentStructures', x: 0, y: 3, w: 7, h: 8 },
@@ -15,10 +15,10 @@ const DEFAULT_LAYOUT = [
 
 function locationLine(s) {
   const parts = [s.city, s.province, s.region].filter(Boolean)
-  return parts.length ? parts.join(' · ') : 'No location set'
+  return parts.length ? parts.join(' Â· ') : 'No location set'
 }
 
-// Compact relative timestamp for the activity feed ("5m ago", "2h ago", …).
+// Compact relative timestamp for the activity feed ("5m ago", "2h ago", â€¦).
 function timeAgo(iso) {
   const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
   if (seconds < 60) return 'just now'
@@ -32,7 +32,7 @@ function timeAgo(iso) {
 }
 
 // The admin's home: dashboard overview built from free-form blocks (see
-// DashboardGrid) — drag/resize is available via "Customize layout".
+// DashboardGrid) â€” drag/resize is available via "Customize layout".
 export default function AdminDashboardPage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
     setLayoutVersion((v) => v + 1)
   }
 
-  if (loading) return <p className="muted">Loading…</p>
+  if (loading) return <p className="muted">Loadingâ€¦</p>
   if (error) return <p className="error-text">{error}</p>
 
   const statCards = [
@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
               <span className="chip chip-round">
                 <Icon name="building" size={20} />
               </span>
-              No structures yet — create your first one to get started.
+              No structures yet â€” create your first one to get started.
             </div>
           ) : (
             <ul className="activity-list">
@@ -200,7 +200,7 @@ export default function AdminDashboardPage() {
               <span className="chip chip-round tone-2">
                 <Icon name="check" size={20} />
               </span>
-              All caught up — no open change requests.
+              All caught up â€” no open change requests.
             </div>
           ) : (
             <ul className="activity-list">
@@ -216,7 +216,7 @@ export default function AdminDashboardPage() {
                       </Link>
                     </span>
                     <span className="activity-sub">
-                      {r.document_id ? 'Document change request' : r.title || 'Request'} ·{' '}
+                      {r.document_id ? 'Document change request' : r.title || 'Request'} Â·{' '}
                       {r.host_email || 'host removed'}
                     </span>
                   </div>
@@ -239,7 +239,7 @@ export default function AdminDashboardPage() {
         >
           <h2>Set up a new property</h2>
           <p className="muted">
-            Create a structure, add its units and manuals, then share a guest link — the
+            Create a structure, add its units and manuals, then share a guest link â€” the
             assistant answers from those documents only.
           </p>
           <div className="form-actions">

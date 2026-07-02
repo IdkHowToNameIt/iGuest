@@ -5,7 +5,7 @@
 
 import { BACKEND_URL } from '../backendUrl.js'
 
-const TOKEN_KEY = 'guestreply_host_token'
+const TOKEN_KEY = 'iguest_host_token'
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY)
@@ -30,7 +30,7 @@ async function request(path, { method = 'GET', body, isForm = false } = {}) {
 
   let payload
   if (isForm) {
-    payload = body // FormData — let the browser set the multipart boundary
+    payload = body // FormData â€” let the browser set the multipart boundary
   } else if (body !== undefined) {
     headers['Content-Type'] = 'application/json'
     payload = JSON.stringify(body)
@@ -61,7 +61,7 @@ async function request(path, { method = 'GET', body, isForm = false } = {}) {
   return data
 }
 
-// ── auth ───────────────────────────────────────────────────────────────────────
+// â”€â”€ auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const login = (email, password) =>
   request('/api/host/login', { method: 'POST', body: { email, password } })
 export const changePassword = (currentPassword, newPassword) =>
@@ -70,7 +70,7 @@ export const changePassword = (currentPassword, newPassword) =>
     body: { current_password: currentPassword, new_password: newPassword },
   })
 
-// ── profile / content ────────────────────────────────────────────────────────────
+// â”€â”€ profile / content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getMe = () => request('/api/host/me')
 export const uploadAvatar = (file) => {
   const form = new FormData()
@@ -84,7 +84,7 @@ export const listFaqs = () => request('/api/host/faqs')
 export const getAnalytics = () => request('/api/host/analytics')
 export const getUnitAnalytics = (unitId) => request(`/api/host/units/${unitId}/analytics`)
 
-// ── change requests ──────────────────────────────────────────────────────────────
+// â”€â”€ change requests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const listChangeRequests = () => request('/api/host/change-requests')
 // documentId set -> request about a document; otherwise pass a `title` for an
 // "other" problem (the two are mutually exclusive on the backend).

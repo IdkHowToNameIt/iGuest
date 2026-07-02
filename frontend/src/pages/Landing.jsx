@@ -12,7 +12,7 @@ export default function Landing() {
         <div className="error-icon">
           <Icon name="home" size={26} />
         </div>
-        <h2>GuestReply</h2>
+        <h2>iGuest</h2>
         <p>
           This is the guest assistant for short-term rentals. Guests access it
           through the personal link provided by their host.

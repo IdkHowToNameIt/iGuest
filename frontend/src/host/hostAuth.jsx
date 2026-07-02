@@ -6,7 +6,7 @@ import { getToken, setToken, login as apiLogin } from './hostApi.js'
 // localStorage; additionally we remember whether the host must change their
 // (initially temporary) password, so the guard can force that step first.
 
-const MUST_CHANGE_KEY = 'guestreply_host_must_change'
+const MUST_CHANGE_KEY = 'iguest_host_must_change'
 
 const HostAuthContext = createContext(null)
 

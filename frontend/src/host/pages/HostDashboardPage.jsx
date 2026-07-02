@@ -30,7 +30,7 @@ const SECTION_LABELS = {
   analytics: 'What guests ask',
   requests: 'Change requests',
 }
-const LAYOUT_KEY = 'guestreply_host_dashboard_layout_v1'
+const LAYOUT_KEY = 'iguest_host_dashboard_layout_v1'
 const DEFAULT_LAYOUT = [
   { i: 'documentation', x: 0, y: 0, w: 6, h: 7 },
   { i: 'analytics', x: 6, y: 0, w: 6, h: 8 },
@@ -38,8 +38,8 @@ const DEFAULT_LAYOUT = [
   { i: 'requests', x: 6, y: 8, w: 6, h: 9 },
 ]
 // Notifications: whether they're on, and which resolved requests were already seen.
-const NOTIF_KEY = 'guestreply_host_notifications'
-const SEEN_KEY = 'guestreply_host_seen_resolved'
+const NOTIF_KEY = 'iguest_host_notifications'
+const SEEN_KEY = 'iguest_host_seen_resolved'
 
 // Notifications default ON; explicit "false" disables them.
 const loadNotifEnabled = () => localStorage.getItem(NOTIF_KEY) !== 'false'
@@ -243,10 +243,10 @@ export default function HostDashboardPage() {
     }
   }
 
-  if (loading) return <p className="muted">Loading…</p>
+  if (loading) return <p className="muted">Loadingâ€¦</p>
   if (!me) return <p className="error-text">{error || 'Could not load your account.'}</p>
 
-  // Map unit id → name so unit-scoped documents can be labelled.
+  // Map unit id â†’ name so unit-scoped documents can be labelled.
   const unitName = Object.fromEntries((me.units || []).map((u) => [u.id, u.name]))
 
   const openRequests = requests.filter((r) => r.status === 'open')
@@ -297,7 +297,7 @@ export default function HostDashboardPage() {
                       {d.scope_type === 'structure'
                         ? 'shared'
                         : unitName[d.unit_id] || 'unit'}{' '}
-                      · {d.file_type} {statusBadge(d.status)}
+                      Â· {d.file_type} {statusBadge(d.status)}
                     </span>
                   </div>
                   <div className="row-actions">
@@ -320,7 +320,7 @@ export default function HostDashboardPage() {
       <section className="card" key="faq">
         <h2>Suggested answers (FAQ)</h2>
         {faqs.length === 0 ? (
-          <p className="muted">No FAQ entries yet — they build up from guest questions.</p>
+          <p className="muted">No FAQ entries yet â€” they build up from guest questions.</p>
         ) : (
           <ul className="list">
             {faqs.map((f) => (
@@ -362,7 +362,7 @@ export default function HostDashboardPage() {
           </div>
 
           {loadingUnitAnalytics && analyticsScope !== 'general' && !scoped ? (
-            <p className="muted">Loading…</p>
+            <p className="muted">Loadingâ€¦</p>
           ) : !scoped || scoped.total === 0 ? (
             <p className="muted">No guest questions for {scopeLabel} yet.</p>
           ) : (
@@ -380,7 +380,7 @@ export default function HostDashboardPage() {
                       <div className="row-main">
                         <span className="row-title">{cat.label}</span>
                         <span className="row-sub">
-                          {cat.count} question(s) · {Math.round(cat.share * 100)}%
+                          {cat.count} question(s) Â· {Math.round(cat.share * 100)}%
                         </span>
                       </div>
                       <span className="muted">
@@ -392,7 +392,7 @@ export default function HostDashboardPage() {
                         {cat.questions.map((q) => (
                           <li className="row" key={q.question}>
                             <span className="row-sub">{q.question}</span>
-                            <span className="badge">{q.count} · {Math.round(q.share * 100)}%</span>
+                            <span className="badge">{q.count} Â· {Math.round(q.share * 100)}%</span>
                           </li>
                         ))}
                       </ul>
@@ -414,7 +414,7 @@ export default function HostDashboardPage() {
             <label htmlFor="docId">Related document</label>
             <select id="docId" className="select" value={docId} onChange={(e) => setDocId(e.target.value)}>
               <option value="" disabled>
-                — select —
+                â€” select â€”
               </option>
               {documents.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -445,7 +445,7 @@ export default function HostDashboardPage() {
               rows={4}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="e.g. The wifi password changed to …"
+              placeholder="e.g. The wifi password changed to â€¦"
             />
           </div>
           <div className="form-actions">
@@ -454,7 +454,7 @@ export default function HostDashboardPage() {
               type="submit"
               disabled={submitting || !body.trim() || !docId || (isOther && !title.trim())}
             >
-              {submitting ? 'Sending…' : 'Send request'}
+              {submitting ? 'Sendingâ€¦' : 'Send request'}
             </button>
           </div>
         </form>
@@ -513,8 +513,8 @@ export default function HostDashboardPage() {
         </div>
       </div>
       <p className="muted">
-        {(me.units || []).length} unit(s) · signed in as {me.email}{' '}
-        · <Link to="/host/change-password">change password</Link>
+        {(me.units || []).length} unit(s) Â· signed in as {me.email}{' '}
+        Â· <Link to="/host/change-password">change password</Link>
       </p>
       {error && <p className="error-text">{error}</p>}
 
@@ -578,7 +578,7 @@ export default function HostDashboardPage() {
             <Avatar name={me.email} avatarUrl={me.avatar_url} size={64} zoomable />
             <div className="avatar-upload-actions">
               <label className="btn btn-ghost btn-sm">
-                {avatarBusy ? 'Uploading…' : 'Upload photo'}
+                {avatarBusy ? 'Uploadingâ€¦' : 'Upload photo'}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"

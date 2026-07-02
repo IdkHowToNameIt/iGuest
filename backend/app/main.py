@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
                     pass
 
 
-app = FastAPI(title="GuestReply API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="iGuest API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

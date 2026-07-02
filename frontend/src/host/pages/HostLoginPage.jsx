@@ -40,7 +40,7 @@ export default function HostLoginPage() {
             <Icon name="home" size={20} />
           </span>
           <div>
-            <div className="sidebar-brand-name">GuestReply</div>
+            <div className="sidebar-brand-name">iGuest</div>
             <div className="sidebar-brand-sub">Host portal</div>
           </div>
         </div>
@@ -83,7 +83,7 @@ export default function HostLoginPage() {
           </div>
           {error && <p className="error-text">{error}</p>}
           <button className="btn" type="submit" disabled={busy || !email || !password}>
-            {busy ? 'Signing in…' : 'Sign in'}
+            {busy ? 'Signing inâ€¦' : 'Sign in'}
           </button>
         </form>
       </div>

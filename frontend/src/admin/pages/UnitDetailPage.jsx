@@ -36,7 +36,7 @@ function LinkQr({ url, filenameHint }) {
     const canvas = canvasRef.current?.querySelector('canvas')
     if (!canvas) return
     const link = document.createElement('a')
-    link.download = `guestreply-link-${filenameHint}.png`
+    link.download = `iguest-link-${filenameHint}.png`
     link.href = canvas.toDataURL('image/png')
     link.click()
   }
@@ -163,7 +163,7 @@ export default function UnitDetailPage() {
       setCopied(token)
       setTimeout(() => setCopied(null), 1500)
     } catch {
-      // clipboard blocked — the link is still visible to copy manually
+      // clipboard blocked â€” the link is still visible to copy manually
     }
   }
 
@@ -191,7 +191,7 @@ export default function UnitDetailPage() {
     }
   }
 
-  if (loading) return <p className="muted">Loading…</p>
+  if (loading) return <p className="muted">Loadingâ€¦</p>
   if (!unit) return <p className="error-text">{error || 'Unit not found.'}</p>
 
   return (
@@ -213,7 +213,7 @@ export default function UnitDetailPage() {
           </div>
           <div className="form-actions">
             <button className="btn" type="submit" disabled={uploading || !docFile}>
-              {uploading ? 'Uploading…' : 'Upload'}
+              {uploading ? 'Uploadingâ€¦' : 'Upload'}
             </button>
           </div>
         </form>
@@ -228,7 +228,7 @@ export default function UnitDetailPage() {
                     <span className="row-title">{d.original_filename}</span>
                     <span className="row-sub">
                       {d.file_type} {statusBadge(d.status)}
-                      {d.error_message ? ` · ${d.error_message}` : ''}
+                      {d.error_message ? ` Â· ${d.error_message}` : ''}
                     </span>
                   </div>
                   <div className="row-actions">
@@ -248,7 +248,7 @@ export default function UnitDetailPage() {
         <h2>Guest links</h2>
         <div className="form-actions">
           <button className="btn" onClick={handleCreateLink} disabled={creatingLink}>
-            {creatingLink ? 'Generating…' : 'Generate link'}
+            {creatingLink ? 'Generatingâ€¦' : 'Generate link'}
           </button>
         </div>
         {links.length === 0 ? (
@@ -305,7 +305,7 @@ export default function UnitDetailPage() {
                     <div className="row-main">
                       <span className="row-title">{cat.label}</span>
                       <span className="row-sub">
-                        {cat.count} question(s) · {Math.round(cat.share * 100)}%
+                        {cat.count} question(s) Â· {Math.round(cat.share * 100)}%
                       </span>
                     </div>
                   </div>
@@ -315,7 +315,7 @@ export default function UnitDetailPage() {
                         <div className="row-main">
                           <span className="row-sub">{q.question}</span>
                         </div>
-                        <span className="badge">{q.count} · {Math.round(q.share * 100)}%</span>
+                        <span className="badge">{q.count} Â· {Math.round(q.share * 100)}%</span>
                       </li>
                     ))}
                   </ul>

@@ -43,7 +43,7 @@ export default function AdminLayout() {
             <Icon name="home" size={20} />
           </span>
           <div>
-            <div className="sidebar-brand-name">GuestReply</div>
+            <div className="sidebar-brand-name">iGuest</div>
             <div className="sidebar-brand-sub">Admin panel</div>
           </div>
         </div>

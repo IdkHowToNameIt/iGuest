@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     )
 
     # Database
-    postgres_user: str = "guestreply"
-    postgres_password: str = "guestreply"
-    postgres_db: str = "guestreply"
+    postgres_user: str = "iguest"
+    postgres_password: str = "iguest"
+    postgres_db: str = "iguest"
     postgres_host: str = "localhost"
     postgres_port: int = 5432
 
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     embedding_model: str = "models/gemini-embedding-001"
     embedding_batch_size: int = 100  # texts per Gemini embed_content call
     generation_model: str = "models/gemini-2.5-flash"  # free-tier friendly
-    generation_temperature: float = 0.2  # low → faithful to context, less invention
+    generation_temperature: float = 0.2  # low â†’ faithful to context, less invention
 
     # Chunking
     chunk_size: int = 800       # target characters per chunk

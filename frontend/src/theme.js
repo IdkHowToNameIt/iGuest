@@ -2,7 +2,7 @@
 // applied as a `data-theme` attribute on <html> so CSS can key off it.
 // index.html also sets this attribute inline on load to avoid a flash of the
 // wrong theme before this module runs.
-const KEY = 'guestreply_theme'
+const KEY = 'iguest_theme'
 
 function resolveSystem() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'

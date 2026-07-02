@@ -35,7 +35,7 @@ export default function HostLayout() {
             <Icon name="home" size={20} />
           </span>
           <div>
-            <div className="sidebar-brand-name">GuestReply</div>
+            <div className="sidebar-brand-name">iGuest</div>
             <div className="sidebar-brand-sub">Host portal</div>
           </div>
         </div>
