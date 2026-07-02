@@ -1,0 +1,62 @@
+import { useEffect, useRef, useState } from 'react'
+import { getThemePreference, setThemePreference } from '../theme.js'
+
+const OPTIONS = [
+  { value: 'light', label: 'Light', icon: '☀️' },
+  { value: 'dark', label: 'Dark', icon: '🌙' },
+  { value: 'system', label: 'System', icon: '🖥️' },
+]
+
+// Small collapsible menu to switch between light/dark/system theme. The choice
+// is persisted per browser (see ../theme.js) and applied instantly.
+export default function ThemeToggle() {
+  const [pref, setPref] = useState(getThemePreference)
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  function choose(value) {
+    setPref(value)
+    setThemePreference(value)
+    setOpen(false)
+  }
+
+  const current = OPTIONS.find((o) => o.value === pref) || OPTIONS[2]
+
+  return (
+    <div className="theme-toggle" ref={ref}>
+      <button
+        type="button"
+        className="theme-toggle-btn"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Change theme"
+        aria-expanded={open}
+      >
+        <span>{current.icon}</span>
+      </button>
+      {open && (
+        <div className="theme-toggle-menu" role="menu">
+          {OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              role="menuitemradio"
+              aria-checked={o.value === pref}
+              className={`theme-toggle-option${o.value === pref ? ' active' : ''}`}
+              onClick={() => choose(o.value)}
+            >
+              <span>{o.icon}</span> {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

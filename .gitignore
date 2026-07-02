@@ -1,0 +1,25 @@
+# --- Segreti / ambiente ---
+.env
+*.env
+!.env.example
+
+# --- Python (backend) ---
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log
+backend/uploads/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+
+# --- IDE ---
+.idea/
+
+# --- Claude Code (local-machine settings, not shared) ---
+.claude/settings.local.json
+
+# --- Design references (not part of the repo) ---
+spuntoConcept/

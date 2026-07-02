@@ -1,0 +1,24 @@
+# Pins use >= for packages whose pinned versions lacked Python 3.14 wheels.
+# Tested working on Python 3.14.
+fastapi>=0.115
+uvicorn[standard]>=0.32
+python-multipart>=0.0.12
+PyJWT>=2.9
+pydantic>=2.11
+pydantic-settings>=2.7
+sqlalchemy>=2.0.51
+alembic>=1.14
+psycopg[binary]>=3.3.4
+pgvector>=0.3.6
+python-dotenv>=1.0.1
+httpx>=0.28
+# Phase 2 — document ingestion
+PyMuPDF>=1.24
+python-docx>=1.1
+beautifulsoup4>=4.12
+google-genai>=1.0
+# Phase 3 — host accounts + FAQ analytics
+bcrypt>=4.1
+numpy>=1.26
+# Tests
+pytest>=8.0

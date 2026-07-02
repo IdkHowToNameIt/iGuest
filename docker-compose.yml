@@ -1,0 +1,80 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    # Single source of truth: the DB container reads the same credentials the
+    # backend uses (backend/.env). This prevents the classic mismatch where the
+    # container is initialised with one password and the app connects with
+    # another, which surfaces as a password authentication error.
+    env_file:
+      - ./backend/.env
+    ports:
+      # Host-published port is resolved by Compose at startup (defaults to 5432).
+      # The backend connects via POSTGRES_PORT in backend/.env — keep them equal.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      # $$POSTGRES_USER is evaluated inside the container, where env_file set it.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    # Same credentials/config as the DB and local runs. POSTGRES_HOST is overridden
+    # below because, inside the Compose network, the DB is reachable as "db"
+    # (env vars take precedence over the .env file in pydantic-settings).
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_HOST: db
+      # Reliable --reload on bind-mounted volumes (esp. Windows/macOS Docker).
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Mount the source for hot-reload; keep an empty overlay at .venv so a local
+      # host virtualenv never shadows the container's system-installed packages.
+      - ./backend:/app
+      - /app/.venv
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    environment:
+      # Reliable Vite HMR on bind-mounted volumes (esp. Windows/macOS Docker).
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "5174:5173"
+    depends_on:
+      - backend
+    volumes:
+      # Mount the source for hot-reload; keep node_modules from the image.
+      - ./frontend:/app
+      - /app/node_modules
+
+  # Production frontend: static Vite build served by nginx. Opt-in via the "prod"
+  # profile so plain `docker compose up` stays the dev setup.
+  #   docker compose --profile prod up --build frontend-prod
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_BACKEND_URL: http://localhost:8000
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
