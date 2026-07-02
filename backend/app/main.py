@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import admin, geo, guest, host
+from app.routers import admin, geo, guest, host, public
 from app.services.scheduler import faq_recompute_loop, retention_loop
 
 UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
@@ -63,6 +63,7 @@ app.include_router(admin.login_router)
 app.include_router(admin.router)
 app.include_router(host.login_router)
 app.include_router(host.router)
+app.include_router(public.router)
 app.include_router(geo.router)
 
 # Serves profile-picture uploads (see app/services/avatars.py); paths returned

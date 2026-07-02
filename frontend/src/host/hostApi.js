@@ -30,7 +30,7 @@ async function request(path, { method = 'GET', body, isForm = false } = {}) {
 
   let payload
   if (isForm) {
-    payload = body // FormData â€” let the browser set the multipart boundary
+    payload = body // FormData — let the browser set the multipart boundary
   } else if (body !== undefined) {
     headers['Content-Type'] = 'application/json'
     payload = JSON.stringify(body)
@@ -61,7 +61,7 @@ async function request(path, { method = 'GET', body, isForm = false } = {}) {
   return data
 }
 
-// â”€â”€ auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── auth ───────────────────────────────────────────────────────────────────────
 export const login = (email, password) =>
   request('/api/host/login', { method: 'POST', body: { email, password } })
 export const changePassword = (currentPassword, newPassword) =>
@@ -70,7 +70,7 @@ export const changePassword = (currentPassword, newPassword) =>
     body: { current_password: currentPassword, new_password: newPassword },
   })
 
-// â”€â”€ profile / content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── profile / content ────────────────────────────────────────────────────────────
 export const getMe = () => request('/api/host/me')
 export const uploadAvatar = (file) => {
   const form = new FormData()
@@ -84,7 +84,7 @@ export const listFaqs = () => request('/api/host/faqs')
 export const getAnalytics = () => request('/api/host/analytics')
 export const getUnitAnalytics = (unitId) => request(`/api/host/units/${unitId}/analytics`)
 
-// â”€â”€ change requests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── change requests ──────────────────────────────────────────────────────────────
 export const listChangeRequests = () => request('/api/host/change-requests')
 // documentId set -> request about a document; otherwise pass a `title` for an
 // "other" problem (the two are mutually exclusive on the backend).

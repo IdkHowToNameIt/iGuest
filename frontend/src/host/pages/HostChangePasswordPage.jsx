@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { changePassword } from '../hostApi.js'
 import { useHostAuth } from '../hostAuth.jsx'
+import { useT } from '../../i18n/index.jsx'
 import '../../admin/admin.css'
 
 export default function HostChangePasswordPage() {
   const navigate = useNavigate()
+  const { t } = useT()
   const { mustChangePassword, clearMustChange, logout } = useHostAuth()
 
   const [current, setCurrent] = useState('')
@@ -18,11 +20,11 @@ export default function HostChangePasswordPage() {
     e.preventDefault()
     setError(null)
     if (next.length < 8) {
-      setError('The new password must be at least 8 characters.')
+      setError(t('The new password must be at least 8 characters.'))
       return
     }
     if (next !== confirm) {
-      setError('The new passwords do not match.')
+      setError(t('The new passwords do not match.'))
       return
     }
     setBusy(true)
@@ -44,16 +46,16 @@ export default function HostChangePasswordPage() {
 
   return (
     <>
-      <h1>Change password</h1>
+      <h1>{t('Change password')}</h1>
       {mustChangePassword && (
         <p className="muted">
-          You signed in with a temporary password. Please choose a new one to continue.
+          {t('You signed in with a temporary password. Please choose a new one to continue.')}
         </p>
       )}
       <section className="card">
         <form className="form" onSubmit={handleSubmit}>
           <div className="form-row">
-            <label htmlFor="current">Current password</label>
+            <label htmlFor="current">{t('Current password')}</label>
             <input
               id="current"
               type="password"
@@ -64,7 +66,7 @@ export default function HostChangePasswordPage() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="next">New password (min 8 characters)</label>
+            <label htmlFor="next">{t('New password (min 8 characters)')}</label>
             <input
               id="next"
               type="password"
@@ -75,7 +77,7 @@ export default function HostChangePasswordPage() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="confirm">Confirm new password</label>
+            <label htmlFor="confirm">{t('Confirm new password')}</label>
             <input
               id="confirm"
               type="password"
@@ -88,7 +90,7 @@ export default function HostChangePasswordPage() {
           {error && <p className="error-text">{error}</p>}
           <div className="form-actions">
             <button className="btn" type="submit" disabled={busy || !current || !next || !confirm}>
-              {busy ? 'Saving…' : 'Update password'}
+              {busy ? t('Saving…') : t('Update password')}
             </button>
           </div>
         </form>

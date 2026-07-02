@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listAdmins, createAdmin, updateAdmin, deleteAdmin } from '../adminApi.js'
 import { useAuth } from '../auth.jsx'
+import { useT } from '../../i18n/index.jsx'
 
 // Manage additional admin logins, on top of the built-in .env admin account
 // (which never shows up here — it has no DB row, see app/services/auth.py).
 export default function AdminAccountsPage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const { t } = useT()
 
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
@@ -69,7 +71,7 @@ export default function AdminAccountsPage() {
   }
 
   async function handleResetPassword(adminId) {
-    if (!window.confirm('Issue a new temporary password for this admin account?')) return
+    if (!window.confirm(t('Issue a new temporary password for this admin account?'))) return
     try {
       const admin = await updateAdmin(adminId, { reset_password: true })
       setTempPassword({ adminId: admin.id, password: admin.temp_password })
@@ -79,7 +81,7 @@ export default function AdminAccountsPage() {
   }
 
   async function handleDelete(adminId) {
-    if (!window.confirm('Delete this admin account?')) return
+    if (!window.confirm(t('Delete this admin account?'))) return
     try {
       await deleteAdmin(adminId)
       if (tempPassword?.adminId === adminId) setTempPassword(null)
@@ -91,37 +93,37 @@ export default function AdminAccountsPage() {
 
   return (
     <>
-      <h1>Admin accounts</h1>
+      <h1>{t('Admin accounts')}</h1>
 
       <section className="card">
         <p className="muted">
-          The built-in admin login (set in the backend&apos;s .env file) always keeps working as a
-          fallback. Add further named accounts here for other administrators — the temporary
-          password is shown once, so share it securely.
+          {t(
+            "The built-in admin login (set in the backend's .env file) always keeps working as a fallback. Add further named accounts here for other administrators — the temporary password is shown once, so share it securely.",
+          )}
         </p>
         <form className="form" onSubmit={handleCreate}>
           <div className="form-row">
-            <label htmlFor="adminUsername">Username</label>
+            <label htmlFor="adminUsername">{t('Username')}</label>
             <input
               id="adminUsername"
               className="input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. mario"
+              placeholder={t('e.g. mario')}
             />
           </div>
           <div className="form-actions">
             <button className="btn" type="submit" disabled={creating || !username.trim()}>
-              {creating ? 'Creating…' : 'Add admin'}
+              {creating ? t('Creating…') : t('Add admin')}
             </button>
           </div>
         </form>
 
         {error && <p className="error-text">{error}</p>}
         {loading ? (
-          <p className="muted">Loading…</p>
+          <p className="muted">{t('Loading…')}</p>
         ) : admins.length === 0 ? (
-          <p className="muted">No additional admin accounts yet.</p>
+          <p className="muted">{t('No additional admin accounts yet.')}</p>
         ) : (
           <ul className="list">
             {admins.map((a) => (
@@ -131,26 +133,26 @@ export default function AdminAccountsPage() {
                     <span className="row-title">{a.username}</span>
                     <span className="row-sub">
                       <span className={`badge badge-${a.is_active ? 'active' : 'revoked'}`}>
-                        {a.is_active ? 'active' : 'disabled'}
+                        {a.is_active ? t('active') : t('disabled')}
                       </span>
-                      {a.must_change_password ? ' · awaiting password change' : ''}
+                      {a.must_change_password ? ` · ${t('awaiting password change')}` : ''}
                     </span>
                   </div>
                   <div className="row-actions">
                     <button className="btn btn-ghost btn-sm" onClick={() => handleToggle(a)}>
-                      {a.is_active ? 'Disable' : 'Enable'}
+                      {a.is_active ? t('Disable') : t('Enable')}
                     </button>
                     <button className="btn btn-ghost btn-sm" onClick={() => handleResetPassword(a.id)}>
-                      Reset password
+                      {t('Reset password')}
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleDelete(a.id)}>
-                      Delete
+                      {t('Delete')}
                     </button>
                   </div>
                 </div>
                 {tempPassword?.adminId === a.id && (
                   <p className="temp-password">
-                    Temporary password (shown once): <code>{tempPassword.password}</code>
+                    {t('Temporary password (shown once):')} <code>{tempPassword.password}</code>
                   </p>
                 )}
               </li>

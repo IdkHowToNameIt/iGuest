@@ -87,10 +87,44 @@
   align-items: center;
   line-height: 1;
 }
+/* Live count pill on a nav item (concept: purple/white rounded badge). */
+.sidebar-badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.sidebar-link.active .sidebar-badge {
+  background: rgba(255, 255, 255, 0.22);
+}
 
 .sidebar-footer {
   margin-top: auto;
   padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Small info card above the logout button (concept: plan/usage card). */
+.sidebar-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.sidebar-card-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sidebar-text-h);
+}
+.sidebar-card-sub {
+  font-size: 11.5px;
+  color: var(--sidebar-text);
+  margin-top: 2px;
 }
 /* Logout button restyled for the dark sidebar. */
 .sidebar-footer .btn {
@@ -651,8 +685,10 @@
   background: var(--bg-soft);
   border: 1px solid var(--border);
   border-radius: 14px;
-  width: min(1100px, 96vw);
-  height: 92vh;
+  width: min(760px, 94vw);
+  /* Grow with the content up to a cap, so short manuals show as a small popup
+     and there's always visible backdrop around it to click-to-dismiss. */
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
@@ -672,9 +708,45 @@
   white-space: nowrap;
 }
 .doc-modal-body {
-  flex: 1;
+  flex: 1 1 auto;
+  /* Without min-height:0 a flex child won't shrink below its content, so a long
+     manual makes the modal overflow past max-height and its top gets clipped
+     off-screen. This lets the body scroll internally instead. */
+  min-height: 0;
   overflow: auto;
   padding: 20px 24px;
+}
+
+/* ── language toggle (IT/EN pill in the topbar) ─────────────────────────────── */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 2px;
+}
+.lang-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  line-height: 1;
+}
+.lang-toggle button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+/* On the login screens: place the toggle above the card, aligned right. */
+.auth-lang {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
 }
 
 /* ── QR code panel (guest link) ──────────────────────────────────────────────── */
@@ -912,6 +984,37 @@
   color: var(--tone-4);
 }
 
+/* ── "What guests ask" category bars (admin dashboard) ─────────────────────── */
+.qcat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.qcat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.qcat-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.qbar {
+  height: 9px;
+  border-radius: 100px;
+  background: var(--track, rgba(120, 120, 140, 0.16));
+  overflow: hidden;
+}
+.qbar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.3s ease;
+}
+
 .muted {
   color: var(--text-muted);
   font-size: 14px;
@@ -1121,6 +1224,17 @@
   padding: 14px 16px;
   font-size: 14px;
   line-height: 1.6;
+}
+/* Inside the host's modal the surrounding .doc-modal-body already provides the
+   scroll area, sizing and padding — so the text should fill it rather than sit
+   in a fixed 420px boxed panel (which left a large empty area below). */
+.doc-modal-body .doc-text-body {
+  max-height: none;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 .doc-text-p {
   margin: 0 0 10px;

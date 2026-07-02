@@ -1,4 +1,5 @@
 from app.services.faq.analytics import (
+    build_global_analytics,
     build_structure_analytics,
     build_unit_analytics,
     list_structure_faqs,
@@ -7,6 +8,7 @@ from app.services.faq.analytics import (
 from app.services.faq.service import recompute_all_faqs, recompute_unit_faqs
 
 __all__ = [
+    "build_global_analytics",
     "build_structure_analytics",
     "build_unit_analytics",
     "list_structure_faqs",

@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { fetchRegions, fetchProvinces, fetchCities } from '../geoApi.js'
+import { useT } from '../i18n/index.jsx'
 
 // Cascading Region → Province → City selectors over the static /api/geo dataset.
 // Controlled: `value` is { region, province, city } (any may be ''), and
 // `onChange` receives the next full object. Picking a higher level resets the
 // lower ones. The empty option reads `allLabel` (e.g. "All regions") when used
 // as a filter, or a neutral placeholder when used in a form.
-export default function GeoSelect({ value, onChange, allLabel = '— select —', idPrefix = 'geo' }) {
+export default function GeoSelect({ value, onChange, allLabel, idPrefix = 'geo' }) {
+  const { t } = useT()
+  const label = allLabel ?? t('— select —')
   const { region = '', province = '', city = '' } = value || {}
   const [regions, setRegions] = useState([])
   const [provinces, setProvinces] = useState([])
@@ -35,21 +38,21 @@ export default function GeoSelect({ value, onChange, allLabel = '— select —'
   return (
     <div className="geo-select">
       <div className="form-row">
-        <label htmlFor={`${idPrefix}-region`}>Region</label>
+        <label htmlFor={`${idPrefix}-region`}>{t('Region')}</label>
         <select
           id={`${idPrefix}-region`}
           className="select"
           value={region}
           onChange={(e) => onChange({ region: e.target.value, province: '', city: '' })}
         >
-          <option value="">{allLabel}</option>
+          <option value="">{label}</option>
           {regions.map((r) => (
             <option key={r} value={r}>{r}</option>
           ))}
         </select>
       </div>
       <div className="form-row">
-        <label htmlFor={`${idPrefix}-province`}>Province</label>
+        <label htmlFor={`${idPrefix}-province`}>{t('Province')}</label>
         <select
           id={`${idPrefix}-province`}
           className="select"
@@ -57,14 +60,14 @@ export default function GeoSelect({ value, onChange, allLabel = '— select —'
           disabled={!region}
           onChange={(e) => onChange({ region, province: e.target.value, city: '' })}
         >
-          <option value="">{allLabel}</option>
+          <option value="">{label}</option>
           {provinces.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
       </div>
       <div className="form-row">
-        <label htmlFor={`${idPrefix}-city`}>City</label>
+        <label htmlFor={`${idPrefix}-city`}>{t('City')}</label>
         <select
           id={`${idPrefix}-city`}
           className="select"
@@ -72,7 +75,7 @@ export default function GeoSelect({ value, onChange, allLabel = '— select —'
           disabled={!province}
           onChange={(e) => onChange({ region, province, city: e.target.value })}
         >
-          <option value="">{allLabel}</option>
+          <option value="">{label}</option>
           {cities.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}

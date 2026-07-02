@@ -5,12 +5,14 @@ import { getMe } from './hostApi.js'
 import Icon from '../components/Icon.jsx'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 import UserMenu from '../components/UserMenu.jsx'
+import { useT, LangToggle } from '../i18n/index.jsx'
 import '../admin/admin.css'
 
 // Shell around the authenticated host portal. Reuses the admin panel's sidebar
 // shell/styling for a consistent look between the two panels.
 export default function HostLayout() {
   const { logout } = useHostAuth()
+  const { t } = useT()
   const navigate = useNavigate()
   const [me, setMe] = useState(null)
 
@@ -36,7 +38,7 @@ export default function HostLayout() {
           </span>
           <div>
             <div className="sidebar-brand-name">iGuest</div>
-            <div className="sidebar-brand-sub">Host portal</div>
+            <div className="sidebar-brand-sub">{t('Host portal')}</div>
           </div>
         </div>
         <nav className="sidebar-nav">
@@ -44,7 +46,7 @@ export default function HostLayout() {
             <span className="sidebar-link-icon">
               <Icon name="dashboard" size={18} />
             </span>
-            <span className="sidebar-link-label">Dashboard</span>
+            <span className="sidebar-link-label">{t('Dashboard')}</span>
           </NavLink>
           <NavLink
             to="/host/change-password"
@@ -53,20 +55,27 @@ export default function HostLayout() {
             <span className="sidebar-link-icon">
               <Icon name="key" size={18} />
             </span>
-            <span className="sidebar-link-label">Change password</span>
+            <span className="sidebar-link-label">{t('Change password')}</span>
           </NavLink>
         </nav>
         <div className="sidebar-footer">
+          {me?.email && (
+            <div className="sidebar-card">
+              <div className="sidebar-card-title">{me.structure_name || 'Host portal'}</div>
+              <div className="sidebar-card-sub">{me.email}</div>
+            </div>
+          )}
           <button className="btn btn-sm" onClick={handleLogout}>
-            <Icon name="power" size={15} /> <span className="sidebar-link-label">Log out</span>
+            <Icon name="power" size={15} /> <span className="sidebar-link-label">{t('Log out')}</span>
           </button>
         </div>
       </aside>
 
       <div className="shell-content">
         <header className="topbar">
-          <span className="topbar-title">Host portal</span>
+          <span className="topbar-title">{t('Host portal')}</span>
           <div className="topbar-actions">
+            <LangToggle />
             <ThemeToggle />
             <UserMenu
               name={me?.email}

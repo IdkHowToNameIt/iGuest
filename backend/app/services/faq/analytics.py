@@ -102,6 +102,16 @@ def build_structure_analytics(db: Session, structure_id: uuid.UUID) -> UnitAnaly
     return _analytics_from_clusters(list(clusters))
 
 
+def build_global_analytics(db: Session) -> UnitAnalytics:
+    """Question analytics aggregated across every unit (admin dashboard view).
+
+    Groups all guest questions into topic categories so the admin can see, at a
+    glance, what guests ask most across all properties.
+    """
+    clusters = db.execute(select(QuestionCluster)).scalars().all()
+    return _analytics_from_clusters(list(clusters))
+
+
 @dataclass
 class FaqEntry:
     rank: int

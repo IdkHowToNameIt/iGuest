@@ -25,7 +25,10 @@ Admin API (single administrator).
                 POST /api/admin/change-password        (self-service, DB-backed admins only)
   Change reqs:  GET /api/admin/change-requests  (optional status / structure_id filters)
                 PATCH /api/admin/change-requests/{id}  (resolve + admin note)
-  Analytics:    GET /api/admin/units/{uid}/analytics
+  Visit reqs:   GET /api/admin/visit-requests   (landing leads; optional status filter)
+                PATCH/DELETE /api/admin/visit-requests/{id}  (contact/archive/note or drop)
+  Analytics:    GET /api/admin/analytics            (question categories, all properties)
+                GET /api/admin/units/{uid}/analytics
   Profile:      GET/PATCH /api/admin/profile   (display name for the single admin account)
                 POST/DELETE /api/admin/profile/avatar
   Stats:        GET /api/admin/stats           (dashboard overview counts)
@@ -52,6 +55,7 @@ from app.models import (
     Message,
     Structure,
     Unit,
+    VisitRequest,
 )
 from app.models.base import utcnow
 from app.schemas.admin import (
@@ -85,11 +89,13 @@ from app.schemas.admin import (
     UnitCreate,
     UnitOut,
     UnitUpdate,
+    VisitRequestAdminOut,
+    VisitRequestUpdate,
 )
 from app.services.admin_documents import create_and_ingest_document
 from app.services.auth import AuthError, authenticate_admin, create_access_token
 from app.services.avatars import AvatarError, delete_avatar_file, save_avatar
-from app.services.faq import build_unit_analytics
+from app.services.faq import build_global_analytics, build_unit_analytics
 from app.services.links import create_guest_link, delete_link
 from app.services.passwords import generate_temp_password, hash_password, verify_password
 
@@ -577,7 +583,46 @@ def update_change_request(
     return ChangeRequestAdminOut.model_validate(req)
 
 
+# ── visit requests (leads from the public landing) ─────────────────────────────────
+
+@router.get("/visit-requests", response_model=list[VisitRequestAdminOut])
+def list_visit_requests(status: str | None = None, db: Session = Depends(get_db)):
+    stmt = select(VisitRequest).order_by(VisitRequest.created_at.desc())
+    if status is not None:
+        stmt = stmt.where(VisitRequest.status == status)
+    return db.execute(stmt).scalars().all()
+
+
+@router.patch("/visit-requests/{request_id}", response_model=VisitRequestAdminOut)
+def update_visit_request(
+    request_id: uuid.UUID, body: VisitRequestUpdate, db: Session = Depends(get_db)
+):
+    req = _get_or_404(db, VisitRequest, request_id, "Visit request")
+    req.status = body.status
+    if body.admin_note is not None:
+        req.admin_note = body.admin_note
+    # "handled" once it leaves the "new" state (contacted or archived).
+    req.handled_at = datetime.now(timezone.utc) if body.status != "new" else None
+    db.commit()
+    db.refresh(req)
+    return VisitRequestAdminOut.model_validate(req)
+
+
+@router.delete("/visit-requests/{request_id}", status_code=204)
+def delete_visit_request(request_id: uuid.UUID, db: Session = Depends(get_db)):
+    req = _get_or_404(db, VisitRequest, request_id, "Visit request")
+    db.delete(req)
+    db.commit()
+    return Response(status_code=204)
+
+
 # ── analytics ──────────────────────────────────────────────────────────────────────
+
+@router.get("/analytics", response_model=AnalyticsOut)
+def get_global_analytics(db: Session = Depends(get_db)):
+    """Guest questions grouped into topic categories across all properties."""
+    return AnalyticsOut.from_unit_analytics(build_global_analytics(db))
+
 
 @router.get("/units/{unit_id}/analytics", response_model=AnalyticsOut)
 def get_unit_analytics(unit_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -678,9 +723,13 @@ def get_stats(db: Session = Depends(get_db)):
             DocumentChangeRequest.status == "open"
         )
     ).scalar_one()
+    new_visit_requests = db.execute(
+        select(func.count(VisitRequest.id)).where(VisitRequest.status == "new")
+    ).scalar_one()
     return AdminStatsOut(
         structures=structures,
         units=units,
         active_links=active_links,
         open_change_requests=open_change_requests,
+        new_visit_requests=new_visit_requests,
     )

@@ -11,6 +11,7 @@ from app.models.message import Message
 from app.models.question_cluster import QuestionCluster
 from app.models.structure import Structure
 from app.models.unit import Unit
+from app.models.visit_request import VisitRequest
 
 __all__ = [
     "AdminProfile",
@@ -26,4 +27,5 @@ __all__ = [
     "QuestionCluster",
     "Structure",
     "Unit",
+    "VisitRequest",
 ]

@@ -13,13 +13,16 @@ import {
   deleteAvatar,
 } from '../hostApi.js'
 import { useHostAuth } from '../hostAuth.jsx'
-import DocumentText from '../../components/DocumentText.jsx'
+import { DocumentRow } from '../../components/DocumentText.jsx'
 import Avatar from '../../components/Avatar.jsx'
 import Icon from '../../components/Icon.jsx'
 import DashboardGrid, { resetLayout } from '../../components/DashboardGrid.jsx'
+import { useT } from '../../i18n/index.jsx'
 
-function statusBadge(status) {
-  return <span className={`badge badge-${status}`}>{status}</span>
+// Localized status badge (open→pending, resolved→active …); label is translated.
+function StatusBadge({ status }) {
+  const { t } = useT()
+  return <span className={`badge badge-${status}`}>{t(status)}</span>
 }
 
 // Dashboard blocks the host can freely drag/resize (see DashboardGrid). The
@@ -59,6 +62,7 @@ const saveSeen = (ids) => localStorage.setItem(SEEN_KEY, JSON.stringify(ids))
 export default function HostDashboardPage() {
   const navigate = useNavigate()
   const { logout } = useHostAuth()
+  const { t } = useT()
   const { refreshMe } = useOutletContext() ?? {}
 
   const [me, setMe] = useState(null)
@@ -243,10 +247,10 @@ export default function HostDashboardPage() {
     }
   }
 
-  if (loading) return <p className="muted">Loadingâ€¦</p>
-  if (!me) return <p className="error-text">{error || 'Could not load your account.'}</p>
+  if (loading) return <p className="muted">{t('Loading…')}</p>
+  if (!me) return <p className="error-text">{error || t('Could not load your account.')}</p>
 
-  // Map unit id â†’ name so unit-scoped documents can be labelled.
+  // Map unit id → name so unit-scoped documents can be labelled.
   const unitName = Object.fromEntries((me.units || []).map((u) => [u.id, u.name]))
 
   const openRequests = requests.filter((r) => r.status === 'open')
@@ -262,14 +266,18 @@ export default function HostDashboardPage() {
               <div className="row-main">
                 <span className="row-title">
                   <Icon name={r.document_id ? 'file-text' : 'help-circle'} size={15} />{' '}
-                  {r.document_id ? 'Document request' : r.title || 'Other'}
+                  {r.document_id ? t('Document request') : r.title || t('Other')}
                 </span>
                 <span className="row-sub">{new Date(r.created_at).toLocaleString()}</span>
               </div>
-              {statusBadge(r.status === 'open' ? 'pending' : 'active')}
+              <StatusBadge status={r.status === 'open' ? 'pending' : 'active'} />
             </div>
             <p style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>{r.body}</p>
-            {r.admin_note && <p className="muted">Note from {r.admin_name || 'Admin'}: {r.admin_note}</p>}
+            {r.admin_note && (
+              <p className="muted">
+                {t('Note from {name}: {note}', { name: r.admin_name || t('Admin'), note: r.admin_note })}
+              </p>
+            )}
           </li>
         ))}
       </ul>
@@ -279,37 +287,29 @@ export default function HostDashboardPage() {
   const sections = {
     documentation: (
       <section className="card" key="documentation">
-        <h2>Documentation</h2>
+        <h2>{t('Documentation')}</h2>
         <p className="muted">
-          The manuals the assistant uses to answer your guests (read-only). To change
-          them, send a request below.
+          {t(
+            'The manuals the assistant uses to answer your guests (read-only). To change them, send a request below.',
+          )}
         </p>
         {documents.length === 0 ? (
-          <p className="muted">No documents yet.</p>
+          <p className="muted">{t('No documents yet.')}</p>
         ) : (
           <ul className="list">
             {documents.map((d) => (
-              <li className="row" key={d.id} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                <div className="row" style={{ border: 'none', padding: 0, background: 'transparent' }}>
-                  <div className="row-main">
-                    <span className="row-title">{d.original_filename}</span>
-                    <span className="row-sub">
-                      {d.scope_type === 'structure'
-                        ? 'shared'
-                        : unitName[d.unit_id] || 'unit'}{' '}
-                      Â· {d.file_type} {statusBadge(d.status)}
-                    </span>
-                  </div>
-                  <div className="row-actions">
-                    <DocumentText
-                      docId={d.id}
-                      fetchContent={getDocumentContent}
-                      variant="modal"
-                      title={d.original_filename}
-                    />
-                  </div>
-                </div>
-              </li>
+              <DocumentRow
+                key={d.id}
+                docId={d.id}
+                fetchContent={getDocumentContent}
+                title={d.original_filename}
+                subtitle={
+                  <>
+                    {d.scope_type === 'structure' ? t('shared') : unitName[d.unit_id] || t('unit')}{' '}
+                    · {d.file_type} <StatusBadge status={d.status} />
+                  </>
+                }
+              />
             ))}
           </ul>
         )}
@@ -318,9 +318,9 @@ export default function HostDashboardPage() {
 
     faq: (
       <section className="card" key="faq">
-        <h2>Suggested answers (FAQ)</h2>
+        <h2>{t('Suggested answers (FAQ)')}</h2>
         {faqs.length === 0 ? (
-          <p className="muted">No FAQ entries yet â€” they build up from guest questions.</p>
+          <p className="muted">{t('No FAQ entries yet — they build up from guest questions.')}</p>
         ) : (
           <ul className="list">
             {faqs.map((f) => (
@@ -337,17 +337,17 @@ export default function HostDashboardPage() {
     analytics: (() => {
       const scoped = analyticsScope === 'general' ? analytics : unitAnalytics[analyticsScope]
       const scopeLabel =
-        analyticsScope === 'general' ? 'all rooms' : unitName[analyticsScope] || 'this room'
+        analyticsScope === 'general' ? t('all rooms') : unitName[analyticsScope] || t('this room')
       return (
         <section className="card" key="analytics">
-          <h2>What guests ask</h2>
+          <h2>{t('What guests ask')}</h2>
           <div className="pill-tabs">
             <button
               type="button"
               className={`pill-tab${analyticsScope === 'general' ? ' active' : ''}`}
               onClick={() => handleSelectAnalyticsScope('general')}
             >
-              General
+              {t('General')}
             </button>
             {(me.units || []).map((u) => (
               <button
@@ -362,12 +362,14 @@ export default function HostDashboardPage() {
           </div>
 
           {loadingUnitAnalytics && analyticsScope !== 'general' && !scoped ? (
-            <p className="muted">Loadingâ€¦</p>
+            <p className="muted">{t('Loading…')}</p>
           ) : !scoped || scoped.total === 0 ? (
-            <p className="muted">No guest questions for {scopeLabel} yet.</p>
+            <p className="muted">{t('No guest questions for {scope} yet.', { scope: scopeLabel })}</p>
           ) : (
             <>
-              <p className="muted">{scoped.total} guest question(s) for {scopeLabel}.</p>
+              <p className="muted">
+                {t('{n} guest question(s) for {scope}.', { n: scoped.total, scope: scopeLabel })}
+              </p>
               <ul className="list">
                 {scoped.categories.map((cat) => (
                   <li className="row" key={cat.label} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
@@ -380,7 +382,7 @@ export default function HostDashboardPage() {
                       <div className="row-main">
                         <span className="row-title">{cat.label}</span>
                         <span className="row-sub">
-                          {cat.count} question(s) Â· {Math.round(cat.share * 100)}%
+                          {t('{n} question(s)', { n: cat.count })} · {Math.round(cat.share * 100)}%
                         </span>
                       </div>
                       <span className="muted">
@@ -392,7 +394,7 @@ export default function HostDashboardPage() {
                         {cat.questions.map((q) => (
                           <li className="row" key={q.question}>
                             <span className="row-sub">{q.question}</span>
-                            <span className="badge">{q.count} Â· {Math.round(q.share * 100)}%</span>
+                            <span className="badge">{q.count} · {Math.round(q.share * 100)}%</span>
                           </li>
                         ))}
                       </ul>
@@ -408,44 +410,44 @@ export default function HostDashboardPage() {
 
     requests: (
       <section className="card" key="requests">
-        <h2>Change requests</h2>
+        <h2>{t('Change requests')}</h2>
         <form className="form" onSubmit={handleSubmitRequest}>
           <div className="form-row">
-            <label htmlFor="docId">Related document</label>
+            <label htmlFor="docId">{t('Related document')}</label>
             <select id="docId" className="select" value={docId} onChange={(e) => setDocId(e.target.value)}>
               <option value="" disabled>
-                â€” select â€”
+                {t('— select —')}
               </option>
               {documents.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.original_filename}
                 </option>
               ))}
-              <option value="__other__">Other (a different problem)</option>
+              <option value="__other__">{t('Other (a different problem)')}</option>
             </select>
           </div>
           {isOther && (
             <div className="form-row">
-              <label htmlFor="reqTitle">Problem title</label>
+              <label htmlFor="reqTitle">{t('Problem title')}</label>
               <input
                 id="reqTitle"
                 className="input"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Broken heating in the living room"
+                placeholder={t('e.g. Broken heating in the living room')}
                 maxLength={200}
               />
             </div>
           )}
           <div className="form-row">
-            <label htmlFor="body">What should change?</label>
+            <label htmlFor="body">{t('What should change?')}</label>
             <textarea
               id="body"
               className="input"
               rows={4}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="e.g. The wifi password changed to â€¦"
+              placeholder={t('e.g. The wifi password changed to …')}
             />
           </div>
           <div className="form-actions">
@@ -454,7 +456,7 @@ export default function HostDashboardPage() {
               type="submit"
               disabled={submitting || !body.trim() || !docId || (isOther && !title.trim())}
             >
-              {submitting ? 'Sendingâ€¦' : 'Send request'}
+              {submitting ? t('Sending…') : t('Send request')}
             </button>
           </div>
         </form>
@@ -465,24 +467,26 @@ export default function HostDashboardPage() {
             className="btn btn-ghost btn-sm"
             onClick={() => setOpenInProgress((v) => !v)}
           >
-            <Icon name={openInProgress ? 'chevron-down' : 'chevron-right'} size={14} /> In progress ({openRequests.length})
+            <Icon name={openInProgress ? 'chevron-down' : 'chevron-right'} size={14} />{' '}
+            {t('In progress ({n})', { n: openRequests.length })}
           </button>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => setOpenResolved((v) => !v)}
           >
-            <Icon name={openResolved ? 'chevron-down' : 'chevron-right'} size={14} /> Resolved ({resolvedRequests.length})
+            <Icon name={openResolved ? 'chevron-down' : 'chevron-right'} size={14} />{' '}
+            {t('Resolved ({n})', { n: resolvedRequests.length })}
           </button>
         </div>
         {openInProgress && (
           <div style={{ marginTop: 8 }}>
-            <RequestList items={openRequests} empty="No pending requests." />
+            <RequestList items={openRequests} empty={t('No pending requests.')} />
           </div>
         )}
         {openResolved && (
           <div style={{ marginTop: 8 }}>
-            <RequestList items={resolvedRequests} empty="No resolved requests yet." />
+            <RequestList items={resolvedRequests} empty={t('No resolved requests yet.')} />
           </div>
         )}
       </section>
@@ -491,7 +495,7 @@ export default function HostDashboardPage() {
 
   const blocks = Object.entries(sections).map(([key, content]) => ({
     key,
-    title: SECTION_LABELS[key],
+    title: t(SECTION_LABELS[key]),
     content,
   }))
 
@@ -505,23 +509,24 @@ export default function HostDashboardPage() {
             onClick={() => setCustomizing((v) => !v)}
           >
             <Icon name={customizing ? 'check' : 'grip'} size={14} />{' '}
-            {customizing ? 'Done arranging' : 'Customize layout'}
+            {customizing ? t('Done arranging') : t('Customize layout')}
           </button>
           <button className="btn btn-ghost btn-sm" onClick={() => setShowSettings((v) => !v)}>
-            <Icon name="settings" size={14} /> Settings
+            <Icon name="settings" size={14} /> {t('Settings')}
           </button>
         </div>
       </div>
       <p className="muted">
-        {(me.units || []).length} unit(s) Â· signed in as {me.email}{' '}
-        Â· <Link to="/host/change-password">change password</Link>
+        {t('{n} unit(s)', { n: (me.units || []).length })} ·{' '}
+        {t('signed in as {email}', { email: me.email })}{' '}
+        · <Link to="/host/change-password">{t('change password')}</Link>
       </p>
       {error && <p className="error-text">{error}</p>}
 
       <div className="stat-grid">
         <div className="stat-card">
           <div className="stat-card-top">
-            <span className="stat-card-label">Documents</span>
+            <span className="stat-card-label">{t('Documents')}</span>
             <span className="chip">
               <Icon name="file-text" size={19} />
             </span>
@@ -530,7 +535,7 @@ export default function HostDashboardPage() {
         </div>
         <div className="stat-card">
           <div className="stat-card-top">
-            <span className="stat-card-label">FAQ entries</span>
+            <span className="stat-card-label">{t('FAQ entries')}</span>
             <span className="chip tone-2">
               <Icon name="help-circle" size={19} />
             </span>
@@ -539,7 +544,7 @@ export default function HostDashboardPage() {
         </div>
         <div className="stat-card">
           <div className="stat-card-top">
-            <span className="stat-card-label">Guest questions</span>
+            <span className="stat-card-label">{t('Guest questions')}</span>
             <span className="chip tone-3">
               <Icon name="message-circle" size={19} />
             </span>
@@ -548,7 +553,7 @@ export default function HostDashboardPage() {
         </div>
         <div className="stat-card">
           <div className="stat-card-top">
-            <span className="stat-card-label">Open requests</span>
+            <span className="stat-card-label">{t('Open requests')}</span>
             <span className="chip tone-4">
               <Icon name="clipboard" size={19} />
             </span>
@@ -560,25 +565,30 @@ export default function HostDashboardPage() {
       {notifications.length > 0 && (
         <div className="notif-banner">
           <span className="notif-banner-text">
-            <Icon name="bell" size={16} /> {notifications.length} request(s) resolved:{' '}
-            {notifications.map((r) => (r.document_id ? 'document request' : r.title || 'other')).join(', ')}
+            <Icon name="bell" size={16} />{' '}
+            {t('{n} request(s) resolved: {list}', {
+              n: notifications.length,
+              list: notifications
+                .map((r) => (r.document_id ? t('document request') : r.title || t('other')))
+                .join(', '),
+            })}
           </span>
           <button className="btn btn-ghost btn-sm" onClick={() => setNotifications([])}>
-            Dismiss
+            {t('Dismiss')}
           </button>
         </div>
       )}
 
       {showSettings && (
         <section className="card">
-          <h2>Settings</h2>
+          <h2>{t('Settings')}</h2>
 
-          <h3 className="form-section">Profile picture</h3>
+          <h3 className="form-section">{t('Profile picture')}</h3>
           <div className="avatar-upload">
             <Avatar name={me.email} avatarUrl={me.avatar_url} size={64} zoomable />
             <div className="avatar-upload-actions">
               <label className="btn btn-ghost btn-sm">
-                {avatarBusy ? 'Uploadingâ€¦' : 'Upload photo'}
+                {avatarBusy ? t('Uploading…') : t('Upload photo')}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -589,26 +599,27 @@ export default function HostDashboardPage() {
               </label>
               {me.avatar_url && (
                 <button className="btn btn-ghost btn-sm" onClick={handleAvatarDelete} disabled={avatarBusy}>
-                  Remove photo
+                  {t('Remove photo')}
                 </button>
               )}
             </div>
           </div>
 
-          <h3 className="form-section">Notifications</h3>
+          <h3 className="form-section">{t('Notifications')}</h3>
           <label className="notif-toggle">
             <input type="checkbox" checked={notifEnabled} onChange={toggleNotifications} />{' '}
-            Notify me when the admin resolves one of my requests
+            {t('Notify me when the admin resolves one of my requests')}
           </label>
 
-          <h3 className="form-section">Dashboard layout</h3>
+          <h3 className="form-section">{t('Dashboard layout')}</h3>
           <p className="muted">
-            Click "Customize layout" above to drag and resize the blocks below to your liking.
-            Saved in this browser.
+            {t(
+              'Click "Customize layout" above to drag and resize the blocks below to your liking. Saved in this browser.',
+            )}
           </p>
           <div className="form-actions">
             <button className="btn btn-ghost btn-sm" onClick={handleResetLayout}>
-              Reset layout to default
+              {t('Reset layout to default')}
             </button>
           </div>
         </section>

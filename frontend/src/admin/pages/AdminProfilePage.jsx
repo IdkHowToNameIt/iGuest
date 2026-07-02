@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { updateProfile, uploadAvatar, deleteAvatar } from '../adminApi.js'
 import Avatar from '../../components/Avatar.jsx'
+import { useT } from '../../i18n/index.jsx'
 
 // The single admin account's profile: display name + avatar picture. Backed
 // by a singleton `admin_profile` row (the admin itself has no DB row — see
 // app/services/auth.py — since credentials come from .env).
 export default function AdminProfilePage() {
+  const { t } = useT()
   const { profile, refreshProfile } = useOutletContext() ?? {}
 
   const [displayName, setDisplayName] = useState('')
@@ -20,7 +22,7 @@ export default function AdminProfilePage() {
     if (profile) setDisplayName(profile.display_name || '')
   }, [profile])
 
-  if (!profile) return <p className="muted">Loading…</p>
+  if (!profile) return <p className="muted">{t('Loading…')}</p>
 
   async function handleSaveName(e) {
     e.preventDefault()
@@ -67,16 +69,16 @@ export default function AdminProfilePage() {
 
   return (
     <>
-      <h1>Profile</h1>
+      <h1>{t('Profile')}</h1>
       {error && <p className="error-text">{error}</p>}
 
       <section className="card">
-        <h2>Profile picture</h2>
+        <h2>{t('Profile picture')}</h2>
         <div className="avatar-upload">
           <Avatar name={profile.display_name || 'Admin'} avatarUrl={profile.avatar_url} size={80} zoomable />
           <div className="avatar-upload-actions">
             <label className="btn btn-ghost btn-sm">
-              {avatarBusy ? 'Uploading…' : 'Upload photo'}
+              {avatarBusy ? t('Uploading…') : t('Upload photo')}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -87,7 +89,7 @@ export default function AdminProfilePage() {
             </label>
             {profile.avatar_url && (
               <button className="btn btn-ghost btn-sm" onClick={handleAvatarDelete} disabled={avatarBusy}>
-                Remove photo
+                {t('Remove photo')}
               </button>
             )}
           </div>
@@ -95,10 +97,10 @@ export default function AdminProfilePage() {
       </section>
 
       <section className="card">
-        <h2>Display name</h2>
+        <h2>{t('Display name')}</h2>
         <form className="form" onSubmit={handleSaveName}>
           <div className="form-row">
-            <label htmlFor="displayName">Name shown in the admin panel</label>
+            <label htmlFor="displayName">{t('Name shown in the admin panel')}</label>
             <input
               id="displayName"
               className="input"
@@ -110,7 +112,7 @@ export default function AdminProfilePage() {
           </div>
           <div className="form-actions">
             <button className="btn" type="submit" disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? t('Saving…') : t('Save')}
             </button>
           </div>
         </form>

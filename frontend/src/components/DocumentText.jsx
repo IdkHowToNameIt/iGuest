@@ -1,14 +1,10 @@
-import { useEffect, useState } from 'react'
-import Icon from './Icon.jsx'
+import { useState } from 'react'
+import { useT } from '../i18n/index.jsx'
 
-// A "View text" toggle for a document. `fetchContent(id)` returns
-// { extracted_text, ... } from whichever API client the caller uses (admin or
-// host), so this component is reused on both sides. The text is fetched lazily
-// the first time it is opened.
 // Render extracted plain text as readable, formatted blocks: blank lines split
 // paragraphs, single newlines are preserved inside a paragraph, and lines that
 // look like Markdown headings (#, ##, …) are shown as headings. Keeps the view
-// legible for the host without pulling in a Markdown dependency.
+// legible without pulling in a Markdown dependency.
 function FormattedText({ text }) {
   const blocks = text.replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.trim()).filter(Boolean)
   return (
@@ -30,48 +26,31 @@ function FormattedText({ text }) {
   )
 }
 
-function DocBody({ loading, error, content }) {
-  if (loading) return <p className="muted">Loading…</p>
+function DocBody({ loading, error, content, t }) {
+  if (loading) return <p className="muted">{t('Loading…')}</p>
   if (error) return <p className="error-text">{error}</p>
   if (content?.text) return <FormattedText text={content.text} />
   if (content?.errorMessage) {
-    return <p className="error-text">This document could not be read: {content.errorMessage}</p>
+    return (
+      <p className="error-text">
+        {t('This document could not be read:')} {content.errorMessage}
+      </p>
+    )
   }
-  return <p className="muted">No text extracted (the document may still be processing).</p>
+  return <p className="muted">{t('No text extracted (the document may still be processing).')}</p>
 }
 
-// Full-page-ish popup: the document text over most of the viewport, with a
-// close button and the usual dismiss affordances (backdrop click, Escape).
-function DocModal({ title, loading, error, content, onClose }) {
-  useEffect(() => {
-    function onKeyDown(e) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
-
-  return (
-    <div className="doc-modal-backdrop" onClick={onClose}>
-      <div className="doc-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="doc-modal-head">
-          <h2>{title}</h2>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>
-            <Icon name="x" size={14} /> Close
-          </button>
-        </div>
-        <div className="doc-modal-body">
-          <DocBody loading={loading} error={error} content={content} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// `variant="inline"` (default) expands the text in place, under the row —
-// used in the admin panel. `variant="modal"` opens a large popup instead,
-// used in the host portal so the document isn't squeezed into the dashboard.
-export default function DocumentText({ docId, fetchContent, variant = 'inline', title }) {
+// A single document row: the metadata line (title + subtitle + optional extra
+// actions) with a "View text" toggle, and — when open — the extracted manual
+// text rendered full-width BELOW the row. Rendering the panel as a sibling of
+// the row (not inside the narrow actions column) keeps it from being squeezed,
+// so it looks identical in the admin pages and the host dashboard grid.
+//
+// `fetchContent(id)` returns { extracted_text, error_message } from whichever
+// API client the caller uses (admin or host); the text is fetched lazily on
+// first open.
+export function DocumentRow({ docId, fetchContent, title, subtitle, actions }) {
+  const { t } = useT()
   const [open, setOpen] = useState(false)
   const [content, setContent] = useState(null) // { text, errorMessage }
   const [loading, setLoading] = useState(false)
@@ -98,24 +77,24 @@ export default function DocumentText({ docId, fetchContent, variant = 'inline', 
   }
 
   return (
-    <>
-      <button className="btn btn-ghost btn-sm" onClick={toggle}>
-        {open ? (variant === 'modal' ? 'Close' : 'Hide text') : 'View text'}
-      </button>
-      {open && variant === 'modal' && (
-        <DocModal
-          title={title || 'Document'}
-          loading={loading}
-          error={error}
-          content={content}
-          onClose={() => setOpen(false)}
-        />
-      )}
-      {open && variant !== 'modal' && (
+    <li className="row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+      <div className="row" style={{ border: 'none', padding: 0, background: 'transparent' }}>
+        <div className="row-main">
+          <span className="row-title">{title}</span>
+          {subtitle != null && <span className="row-sub">{subtitle}</span>}
+        </div>
+        <div className="row-actions">
+          <button className="btn btn-ghost btn-sm" onClick={toggle}>
+            {open ? t('Hide text') : t('View text')}
+          </button>
+          {actions}
+        </div>
+      </div>
+      {open && (
         <div className="doc-text">
-          <DocBody loading={loading} error={error} content={content} />
+          <DocBody loading={loading} error={error} content={content} t={t} />
         </div>
       )}
-    </>
+    </li>
   )
 }

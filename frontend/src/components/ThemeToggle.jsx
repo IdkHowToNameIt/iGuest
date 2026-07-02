@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getThemePreference, setThemePreference } from '../theme.js'
 import Icon from './Icon.jsx'
+import { useT } from '../i18n/index.jsx'
 
 const OPTIONS = [
   { value: 'light', label: 'Light', icon: 'sun' },
@@ -11,6 +12,7 @@ const OPTIONS = [
 // Small collapsible menu to switch between light/dark/system theme. The choice
 // is persisted per browser (see ../theme.js) and applied instantly.
 export default function ThemeToggle() {
+  const { t } = useT()
   const [pref, setPref] = useState(getThemePreference)
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -37,7 +39,7 @@ export default function ThemeToggle() {
         type="button"
         className="theme-toggle-btn"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Change theme"
+        aria-label={t('Change theme')}
         aria-expanded={open}
       >
         <Icon name={current.icon} size={17} />
@@ -53,7 +55,7 @@ export default function ThemeToggle() {
               className={`theme-toggle-option${o.value === pref ? ' active' : ''}`}
               onClick={() => choose(o.value)}
             >
-              <Icon name={o.icon} size={16} /> {o.label}
+              <Icon name={o.icon} size={16} /> {t(o.label)}
             </button>
           ))}
         </div>

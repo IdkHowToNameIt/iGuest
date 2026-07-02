@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import Icon from '../../components/Icon.jsx'
+import { useT, LangToggle } from '../../i18n/index.jsx'
 import '../admin.css'
 
 export default function LoginPage() {
   const { isAuthenticated, login } = useAuth()
+  const { t } = useT()
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/admin'
@@ -15,7 +17,7 @@ export default function LoginPage() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  // Already signed in â†’ skip the form.
+  // Already signed in → skip the form.
   if (isAuthenticated) return <Navigate to={from} replace />
 
   async function handleSubmit(e) {
@@ -27,7 +29,7 @@ export default function LoginPage() {
       // Force the password rotation step before anything else when required.
       navigate(data.must_change_password ? '/admin/change-password' : from, { replace: true })
     } catch (err) {
-      setError(err.status === 401 ? 'Invalid username or password.' : err.message)
+      setError(err.status === 401 ? t('Invalid username or password.') : err.message)
     } finally {
       setBusy(false)
     }
@@ -42,25 +44,29 @@ export default function LoginPage() {
           </span>
           <div>
             <div className="sidebar-brand-name">iGuest</div>
-            <div className="sidebar-brand-sub">Admin panel</div>
+            <div className="sidebar-brand-sub">{t('Admin panel')}</div>
           </div>
         </div>
         <div>
-          <div className="auth-hero-title">Run every property from one place.</div>
+          <div className="auth-hero-title">{t('Run every property from one place.')}</div>
           <p className="auth-hero-text">
-            Manage structures, units and digital manuals, hand out guest links, and keep an
-            eye on what your guests are asking â€” all from this panel.
+            {t(
+              'Manage structures, units and digital manuals, hand out guest links, and keep an eye on what your guests are asking — all from this panel.',
+            )}
           </p>
         </div>
-        <div className="auth-hero-foot">Multilingual guest assistant for short-term rentals</div>
+        <div className="auth-hero-foot">
+          {t('Multilingual guest assistant for short-term rentals')}
+        </div>
       </div>
 
       <div className="auth-form-side">
+        <div className="auth-lang"><LangToggle /></div>
         <form className="card auth-card form" onSubmit={handleSubmit}>
-          <h2>Admin sign in</h2>
-          <p className="auth-card-sub">Welcome back â€” enter your credentials to continue.</p>
+          <h2>{t('Admin sign in')}</h2>
+          <p className="auth-card-sub">{t('Welcome back — enter your credentials to continue.')}</p>
           <div className="form-row">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">{t('Username')}</label>
             <input
               id="username"
               className="input"
@@ -71,7 +77,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('Password')}</label>
             <input
               id="password"
               type="password"
@@ -83,7 +89,7 @@ export default function LoginPage() {
           </div>
           {error && <p className="error-text">{error}</p>}
           <button className="btn" type="submit" disabled={busy || !username || !password}>
-            {busy ? 'Signing inâ€¦' : 'Sign in'}
+            {busy ? t('Signing in…') : t('Sign in')}
           </button>
         </form>
       </div>

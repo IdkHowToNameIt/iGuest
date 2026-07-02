@@ -206,7 +206,26 @@ def test_get_stats_counts():
     r = client.get("/api/admin/stats", headers=auth_header())
     assert r.status_code == 200
     body = r.json()
-    assert set(body) == {"structures", "units", "active_links", "open_change_requests"}
+    assert set(body) == {
+        "structures",
+        "units",
+        "active_links",
+        "open_change_requests",
+        "new_visit_requests",
+    }
+
+
+def test_global_analytics_empty():
+    override_db(FakeDB(items=[]))  # no question clusters yet
+    r = client.get("/api/admin/analytics", headers=auth_header())
+    assert r.status_code == 200
+    body = r.json()
+    assert body == {"total": 0, "categories": []}
+
+
+def test_global_analytics_requires_auth():
+    r = client.get("/api/admin/analytics")
+    assert r.status_code == 401
 
 
 def test_get_profile_creates_singleton_when_none_exists():

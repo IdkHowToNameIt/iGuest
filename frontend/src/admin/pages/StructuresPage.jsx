@@ -4,6 +4,7 @@ import { listStructures, createStructure } from '../adminApi.js'
 import { useAuth } from '../auth.jsx'
 import GeoSelect from '../../components/GeoSelect.jsx'
 import Icon from '../../components/Icon.jsx'
+import { useT } from '../../i18n/index.jsx'
 
 const EMPTY_GEO = { region: '', province: '', city: '' }
 const EMPTY_FORM = {
@@ -15,14 +16,15 @@ const EMPTY_FORM = {
   contact_email: '',
 }
 
-function locationLine(s) {
+function locationLine(s, t) {
   const parts = [s.city, s.province, s.region].filter(Boolean)
-  return parts.length ? parts.join(' · ') : 'No location set'
+  return parts.length ? parts.join(' · ') : t('No location set')
 }
 
 export default function StructuresPage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const { t } = useT()
 
   const [structures, setStructures] = useState([])
   const [loading, setLoading] = useState(true)
@@ -113,25 +115,25 @@ export default function StructuresPage() {
   return (
     <>
       <div className="page-head">
-        <h1>Structures</h1>
+        <h1>{t('Structures')}</h1>
         <button className="btn btn-sm" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? 'Close' : '+ New structure'}
+          {showForm ? t('Close') : t('+ New structure')}
         </button>
       </div>
 
       {!loading && !showForm && (
         <div className="stat-grid">
           <div className="stat-card">
-            <span className="stat-card-label">Structures shown</span>
+            <span className="stat-card-label">{t('Structures shown')}</span>
             <span className="stat-card-value">{structures.length}</span>
-            {hasFilters && <span className="stat-card-sub">filtered view</span>}
+            {hasFilters && <span className="stat-card-sub">{t('filtered view')}</span>}
           </div>
           <div className="stat-card">
-            <span className="stat-card-label">With location set</span>
+            <span className="stat-card-label">{t('With location set')}</span>
             <span className="stat-card-value">{withLocation}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card-label">With host contact</span>
+            <span className="stat-card-label">{t('With host contact')}</span>
             <span className="stat-card-value">{withHostContact}</span>
           </div>
         </div>
@@ -139,45 +141,45 @@ export default function StructuresPage() {
 
       {showForm && (
         <section className="card">
-          <h2>Create a structure</h2>
+          <h2>{t('Create a structure')}</h2>
           <form className="form" onSubmit={handleCreate}>
             <div className="form-grid">
               <div className="form-row">
-                <label htmlFor="name">Name</label>
+                <label htmlFor="name">{t('Name')}</label>
                 <input id="name" className="input" value={form.name} onChange={setField('name')} />
               </div>
               <div className="form-row">
-                <label htmlFor="lang">Guest language (BCP-47, e.g. it)</label>
+                <label htmlFor="lang">{t('Guest language (BCP-47, e.g. it)')}</label>
                 <input id="lang" className="input" value={form.country_language} onChange={setField('country_language')} placeholder="it" />
               </div>
               <div className="form-row">
-                <label htmlFor="owner">Owner contact (shown to guests if needed)</label>
+                <label htmlFor="owner">{t('Owner contact (shown to guests if needed)')}</label>
                 <input id="owner" className="input" value={form.owner_contact} onChange={setField('owner_contact')} placeholder="info@example.com" />
               </div>
             </div>
 
-            <h3 className="form-section">Location</h3>
+            <h3 className="form-section">{t('Location')}</h3>
             <GeoSelect value={formGeo} onChange={setFormGeo} idPrefix="create" />
 
-            <h3 className="form-section">Host contacts (admin-only)</h3>
+            <h3 className="form-section">{t('Host contacts (admin-only)')}</h3>
             <div className="form-grid">
               <div className="form-row">
-                <label htmlFor="cn">Contact name</label>
+                <label htmlFor="cn">{t('Contact name')}</label>
                 <input id="cn" className="input" value={form.contact_name} onChange={setField('contact_name')} />
               </div>
               <div className="form-row">
-                <label htmlFor="cp">Phone</label>
+                <label htmlFor="cp">{t('Phone')}</label>
                 <input id="cp" className="input" value={form.contact_phone} onChange={setField('contact_phone')} />
               </div>
               <div className="form-row">
-                <label htmlFor="ce">Email</label>
+                <label htmlFor="ce">{t('Email')}</label>
                 <input id="ce" className="input" value={form.contact_email} onChange={setField('contact_email')} />
               </div>
             </div>
 
             <div className="form-actions">
               <button className="btn" type="submit" disabled={busy || !form.name.trim() || !form.country_language.trim() || !form.owner_contact.trim()}>
-                {busy ? 'Creating…' : 'Create'}
+                {busy ? t('Creating…') : t('Create')}
               </button>
             </div>
           </form>
@@ -188,18 +190,18 @@ export default function StructuresPage() {
           "New structure" creation form is open. */}
       {!showForm && (
         <section className="card">
-          <h2>Find structures</h2>
+          <h2>{t('Find structures')}</h2>
           <div className="form-row">
-            <label htmlFor="search">Search by name, city, province or region</label>
+            <label htmlFor="search">{t('Search by name, city, province or region')}</label>
             <input
               id="search"
               className="input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. Colosseo, Roma, Lazio…"
+              placeholder={t('e.g. Colosseo, Roma, Lazio…')}
             />
           </div>
-          <GeoSelect value={filterGeo} onChange={setFilterGeo} allLabel="— all —" idPrefix="filter" />
+          <GeoSelect value={filterGeo} onChange={setFilterGeo} allLabel={t('— all —')} idPrefix="filter" />
           {hasFilters && (
             <div className="form-actions">
               <button
@@ -209,7 +211,7 @@ export default function StructuresPage() {
                   setFilterGeo(EMPTY_GEO)
                 }}
               >
-                Clear filters
+                {t('Clear filters')}
               </button>
             </div>
           )}
@@ -218,9 +220,9 @@ export default function StructuresPage() {
 
       {error && <p className="error-text">{error}</p>}
       {showForm ? null : loading ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t('Loading…')}</p>
       ) : structures.length === 0 ? (
-        <p className="muted">{hasFilters ? 'No structures match your search.' : 'No structures yet.'}</p>
+        <p className="muted">{hasFilters ? t('No structures match your search.') : t('No structures yet.')}</p>
       ) : (
         <div className="structure-grid">
           {structures.map((s) => (
@@ -230,22 +232,22 @@ export default function StructuresPage() {
                 <span className="badge">{s.country_language}</span>
               </div>
               <div className="structure-card-loc">
-                <Icon name="map-pin" size={14} /> {locationLine(s)}
+                <Icon name="map-pin" size={14} /> {locationLine(s, t)}
               </div>
 
               <div className="structure-card-contacts">
-                <span className="row-sub">Owner (guests): {s.owner_contact}</span>
+                <span className="row-sub">{t('Owner (guests):')} {s.owner_contact}</span>
                 {(s.contact_name || s.contact_phone || s.contact_email) ? (
                   <span className="row-sub">
-                    Host: {[s.contact_name, s.contact_phone, s.contact_email].filter(Boolean).join(' · ')}
+                    {t('Host:')} {[s.contact_name, s.contact_phone, s.contact_email].filter(Boolean).join(' · ')}
                   </span>
                 ) : (
-                  <span className="row-sub muted">No host contact set</span>
+                  <span className="row-sub muted">{t('No host contact set')}</span>
                 )}
               </div>
 
               <div className="structure-card-actions">
-                <Link className="btn btn-ghost btn-sm" to={`/admin/structures/${s.id}`}>Open</Link>
+                <Link className="btn btn-ghost btn-sm" to={`/admin/structures/${s.id}`}>{t('Open')}</Link>
               </div>
             </div>
           ))}

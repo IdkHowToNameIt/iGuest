@@ -31,7 +31,7 @@ async function request(path, { method = 'GET', body, isForm = false } = {}) {
 
   let payload
   if (isForm) {
-    payload = body // FormData â€” let the browser set the multipart boundary
+    payload = body // FormData — let the browser set the multipart boundary
   } else if (body !== undefined) {
     headers['Content-Type'] = 'application/json'
     payload = JSON.stringify(body)
@@ -62,7 +62,7 @@ async function request(path, { method = 'GET', body, isForm = false } = {}) {
   return data
 }
 
-// â”€â”€ auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── auth ───────────────────────────────────────────────────────────────────────
 export function login(username, password) {
   return request('/api/admin/login', { method: 'POST', body: { username, password } })
 }
@@ -72,7 +72,7 @@ export const changePassword = (currentPassword, newPassword) =>
     body: { current_password: currentPassword, new_password: newPassword },
   })
 
-// â”€â”€ admin accounts (additional logins, alongside the legacy .env admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── admin accounts (additional logins, alongside the legacy .env admin) ────────────
 export const listAdmins = () => request('/api/admin/admins')
 export const createAdmin = (username) =>
   request('/api/admin/admins', { method: 'POST', body: { username } })
@@ -81,7 +81,7 @@ export const updateAdmin = (id, body) =>
   request(`/api/admin/admins/${id}`, { method: 'PATCH', body })
 export const deleteAdmin = (id) => request(`/api/admin/admins/${id}`, { method: 'DELETE' })
 
-// â”€â”€ structures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── structures ───────────────────────────────────────────────────────────────────
 export const listStructures = ({ q, region, province, city } = {}) => {
   const params = new URLSearchParams()
   if (q) params.set('q', q)
@@ -99,7 +99,7 @@ export const updateStructure = (id, body) =>
 export const deleteStructure = (id) =>
   request(`/api/admin/structures/${id}`, { method: 'DELETE' })
 
-// â”€â”€ units â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── units ──────────────────────────────────────────────────────────────────────
 export const listUnits = (structureId) =>
   request(`/api/admin/structures/${structureId}/units`)
 export const getUnit = (id) => request(`/api/admin/units/${id}`)
@@ -107,7 +107,7 @@ export const createUnit = (structureId, body) =>
   request(`/api/admin/structures/${structureId}/units`, { method: 'POST', body })
 export const deleteUnit = (id) => request(`/api/admin/units/${id}`, { method: 'DELETE' })
 
-// â”€â”€ documents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── documents ────────────────────────────────────────────────────────────────────
 export const listDocuments = ({ structureId, unitId } = {}) => {
   const params = new URLSearchParams()
   if (structureId) params.set('structure_id', structureId)
@@ -126,21 +126,21 @@ export const getDocumentContent = (id) => request(`/api/admin/documents/${id}/co
 export const deleteDocument = (id) =>
   request(`/api/admin/documents/${id}`, { method: 'DELETE' })
 
-// â”€â”€ guest links â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── guest links ──────────────────────────────────────────────────────────────────
 export const listLinks = (unitId) => request(`/api/admin/units/${unitId}/links`)
 export const createLink = (unitId, body = {}) =>
   request(`/api/admin/units/${unitId}/links`, { method: 'POST', body })
 export const revokeLink = (id) =>
   request(`/api/admin/links/${id}/revoke`, { method: 'POST' })
 
-// â”€â”€ conversations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── conversations ─────────────────────────────────────────────────────────────────
 export const listConversations = (unitId) =>
   request(`/api/admin/units/${unitId}/conversations`)
 export const getConversation = (id) => request(`/api/admin/conversations/${id}`)
 export const deleteConversation = (id) =>
   request(`/api/admin/conversations/${id}`, { method: 'DELETE' })
 
-// â”€â”€ hosts (structure-scoped) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── hosts (structure-scoped) ───────────────────────────────────────────────────────
 export const listHosts = (structureId) =>
   request(`/api/admin/structures/${structureId}/hosts`)
 export const createHost = (structureId, email) =>
@@ -150,7 +150,7 @@ export const updateHost = (id, body) =>
   request(`/api/admin/hosts/${id}`, { method: 'PATCH', body })
 export const deleteHost = (id) => request(`/api/admin/hosts/${id}`, { method: 'DELETE' })
 
-// â”€â”€ document change requests (admin inbox) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── document change requests (admin inbox) ─────────────────────────────────────────
 export const listChangeRequests = ({ status, structureId, type } = {}) => {
   const params = new URLSearchParams()
   if (status) params.set('status', status)
@@ -162,11 +162,25 @@ export const listChangeRequests = ({ status, structureId, type } = {}) => {
 export const updateChangeRequest = (id, body) =>
   request(`/api/admin/change-requests/${id}`, { method: 'PATCH', body })
 
-// â”€â”€ analytics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── visit requests (leads from the public landing page) ─────────────────────────
+export const listVisitRequests = ({ status } = {}) => {
+  const params = new URLSearchParams()
+  if (status) params.set('status', status)
+  const qs = params.toString()
+  return request(`/api/admin/visit-requests${qs ? `?${qs}` : ''}`)
+}
+export const updateVisitRequest = (id, body) =>
+  request(`/api/admin/visit-requests/${id}`, { method: 'PATCH', body })
+export const deleteVisitRequest = (id) =>
+  request(`/api/admin/visit-requests/${id}`, { method: 'DELETE' })
+
+// ── analytics ──────────────────────────────────────────────────────────────────
 export const getUnitAnalytics = (unitId) =>
   request(`/api/admin/units/${unitId}/analytics`)
+// Guest questions grouped into topic categories across all properties.
+export const getAnalytics = () => request('/api/admin/analytics')
 
-// â”€â”€ admin profile (single account) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── admin profile (single account) ─────────────────────────────────────────────
 export const getProfile = () => request('/api/admin/profile')
 export const updateProfile = (body) => request('/api/admin/profile', { method: 'PATCH', body })
 export const uploadAvatar = (file) => {
@@ -176,5 +190,5 @@ export const uploadAvatar = (file) => {
 }
 export const deleteAvatar = () => request('/api/admin/profile/avatar', { method: 'DELETE' })
 
-// â”€â”€ dashboard stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── dashboard stats ──────────────────────────────────────────────────────────────
 export const getStats = () => request('/api/admin/stats')

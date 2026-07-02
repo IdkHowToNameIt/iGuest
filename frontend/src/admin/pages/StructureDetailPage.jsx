@@ -18,16 +18,19 @@ import {
 } from '../adminApi.js'
 import { useAuth } from '../auth.jsx'
 import GeoSelect from '../../components/GeoSelect.jsx'
-import DocumentText from '../../components/DocumentText.jsx'
+import { DocumentRow } from '../../components/DocumentText.jsx'
+import { useT } from '../../i18n/index.jsx'
 
-function statusBadge(status) {
-  return <span className={`badge badge-${status}`}>{status}</span>
+function StatusBadge({ status }) {
+  const { t } = useT()
+  return <span className={`badge badge-${status}`}>{t(status)}</span>
 }
 
 export default function StructureDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const { t } = useT()
 
   const [structure, setStructure] = useState(null)
   const [units, setUnits] = useState([])
@@ -137,7 +140,7 @@ export default function StructureDetailPage() {
   }
 
   async function handleDeleteUnit(unitId) {
-    if (!window.confirm('Delete this unit and all its data?')) return
+    if (!window.confirm(t('Delete this unit and all its data?'))) return
     try {
       await deleteUnit(unitId)
       await refresh()
@@ -163,7 +166,7 @@ export default function StructureDetailPage() {
   }
 
   async function handleDeleteDoc(docId) {
-    if (!window.confirm('Delete this document?')) return
+    if (!window.confirm(t('Delete this document?'))) return
     try {
       await deleteDocument(docId)
       await refresh()
@@ -173,7 +176,7 @@ export default function StructureDetailPage() {
   }
 
   async function handleDeleteStructure() {
-    if (!window.confirm('Delete this structure with all units, documents, hosts and conversations?')) return
+    if (!window.confirm(t('Delete this structure with all units, documents, hosts and conversations?'))) return
     try {
       await deleteStructure(id)
       navigate('/admin/structures', { replace: true })
@@ -209,7 +212,7 @@ export default function StructureDetailPage() {
   }
 
   async function handleResetPassword(hostId) {
-    if (!window.confirm('Issue a new temporary password for this host?')) return
+    if (!window.confirm(t('Issue a new temporary password for this host?'))) return
     try {
       const host = await updateHost(hostId, { reset_password: true })
       setTempPassword({ hostId: host.id, password: host.temp_password })
@@ -220,7 +223,7 @@ export default function StructureDetailPage() {
   }
 
   async function handleDeleteHost(hostId) {
-    if (!window.confirm('Delete this host account?')) return
+    if (!window.confirm(t('Delete this host account?'))) return
     try {
       await deleteHost(hostId)
       if (tempPassword?.hostId === hostId) setTempPassword(null)
@@ -230,66 +233,67 @@ export default function StructureDetailPage() {
     }
   }
 
-  if (loading || !details) return <p className="muted">Loading…</p>
-  if (!structure) return <p className="error-text">{error || 'Structure not found.'}</p>
+  if (loading || !details) return <p className="muted">{t('Loading…')}</p>
+  if (!structure) return <p className="error-text">{error || t('Structure not found.')}</p>
 
   return (
     <>
       <div className="admin-breadcrumb">
-        <Link to="/admin/structures">Structures</Link> / {structure.name}
+        <Link to="/admin/structures">{t('Structures')}</Link> / {structure.name}
       </div>
 
       <div className="page-head">
         <h1>{structure.name}</h1>
         <button className="btn btn-danger btn-sm" onClick={handleDeleteStructure}>
-          Delete structure
+          {t('Delete structure')}
         </button>
       </div>
 
       {error && <p className="error-text">{error}</p>}
 
       <section className="card">
-        <h2>Details, location &amp; contacts</h2>
+        <h2>{t('Details, location & contacts')}</h2>
         <form className="form" onSubmit={handleSaveDetails}>
           <div className="form-grid">
             <div className="form-row">
-              <label htmlFor="d-name">Name</label>
+              <label htmlFor="d-name">{t('Name')}</label>
               <input id="d-name" className="input" value={details.name} onChange={setDetail('name')} />
             </div>
             <div className="form-row">
-              <label htmlFor="d-lang">Guest language (BCP-47)</label>
+              <label htmlFor="d-lang">{t('Guest language (BCP-47)')}</label>
               <input id="d-lang" className="input" value={details.country_language} onChange={setDetail('country_language')} />
             </div>
             <div className="form-row">
-              <label htmlFor="d-owner">Owner contact (shown to guests)</label>
+              <label htmlFor="d-owner">{t('Owner contact (shown to guests)')}</label>
               <input id="d-owner" className="input" value={details.owner_contact} onChange={setDetail('owner_contact')} />
             </div>
           </div>
 
-          <h3 className="form-section">Location</h3>
+          <h3 className="form-section">{t('Location')}</h3>
           <GeoSelect value={geo} onChange={setGeo} idPrefix="edit" />
 
-          <h3 className="form-section">Host contacts (admin-only — never shown to guests)</h3>
+          <h3 className="form-section">{t('Host contacts (admin-only — never shown to guests)')}</h3>
           <div className="form-grid">
             <div className="form-row">
-              <label htmlFor="d-cn">Contact name</label>
+              <label htmlFor="d-cn">{t('Contact name')}</label>
               <input id="d-cn" className="input" value={details.contact_name} onChange={setDetail('contact_name')} />
             </div>
             <div className="form-row">
-              <label htmlFor="d-cp">Phone</label>
+              <label htmlFor="d-cp">{t('Phone')}</label>
               <input id="d-cp" className="input" value={details.contact_phone} onChange={setDetail('contact_phone')} />
             </div>
             <div className="form-row">
-              <label htmlFor="d-ce">Email</label>
+              <label htmlFor="d-ce">{t('Email')}</label>
               <input id="d-ce" className="input" value={details.contact_email} onChange={setDetail('contact_email')} />
             </div>
           </div>
 
-          <h3 className="form-section">Chatbot welcome message</h3>
+          <h3 className="form-section">{t('Chatbot welcome message')}</h3>
           <div className="form-row">
             <label htmlFor="d-welcome">
-              Custom greeting shown to guests when they open the chat (leave empty to use the
-              default greeting for the guest language)
+              {t(
+                'Custom greeting shown to guests when they open the chat (leave empty to use the default greeting for the guest language)',
+              )}
             </label>
             <textarea
               id="d-welcome"
@@ -298,33 +302,33 @@ export default function StructureDetailPage() {
               maxLength={2000}
               value={details.welcome_message}
               onChange={setDetail('welcome_message')}
-              placeholder="e.g. Welcome to Casa Bella! I'm here to help with anything about your stay."
+              placeholder={t("e.g. Welcome to Casa Bella! I'm here to help with anything about your stay.")}
             />
           </div>
 
           <div className="form-actions">
             <button className="btn" type="submit" disabled={savingDetails || !details.name.trim()}>
-              {savingDetails ? 'Saving…' : 'Save changes'}
+              {savingDetails ? t('Saving…') : t('Save changes')}
             </button>
           </div>
         </form>
       </section>
 
       <section className="card">
-        <h2>Units</h2>
+        <h2>{t('Units')}</h2>
         <form className="form" onSubmit={handleCreateUnit}>
           <div className="form-row">
-            <label htmlFor="unitName">New unit name</label>
+            <label htmlFor="unitName">{t('New unit name')}</label>
             <input id="unitName" className="input" value={unitName} onChange={(e) => setUnitName(e.target.value)} placeholder="Room 1" />
           </div>
           <div className="form-actions">
             <button className="btn" type="submit" disabled={busy || !unitName.trim()}>
-              {busy ? 'Adding…' : 'Add unit'}
+              {busy ? t('Adding…') : t('Add unit')}
             </button>
           </div>
         </form>
         {units.length === 0 ? (
-          <p className="muted">No units yet.</p>
+          <p className="muted">{t('No units yet.')}</p>
         ) : (
           <ul className="list">
             {units.map((u) => (
@@ -335,8 +339,8 @@ export default function StructureDetailPage() {
                   </span>
                 </div>
                 <div className="row-actions">
-                  <Link className="btn btn-ghost btn-sm" to={`/admin/units/${u.id}`}>Open</Link>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUnit(u.id)}>Delete</button>
+                  <Link className="btn btn-ghost btn-sm" to={`/admin/units/${u.id}`}>{t('Open')}</Link>
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUnit(u.id)}>{t('Delete')}</button>
                 </div>
               </li>
             ))}
@@ -345,24 +349,26 @@ export default function StructureDetailPage() {
       </section>
 
       <section className="card">
-        <h2>Hosts</h2>
+        <h2>{t('Hosts')}</h2>
         <p className="muted">
-          A host signs in at <code>/host</code> to read this structure&apos;s documentation
-          and send change requests. The temporary password is shown once — share it securely.
+          {t('A host signs in at')} <code>/host</code>{' '}
+          {t(
+            "to read this structure's documentation and send change requests. The temporary password is shown once — share it securely.",
+          )}
         </p>
         <form className="form" onSubmit={handleCreateHost}>
           <div className="form-row">
-            <label htmlFor="hostEmail">Host email</label>
+            <label htmlFor="hostEmail">{t('Host email')}</label>
             <input id="hostEmail" type="email" className="input" value={hostEmail} onChange={(e) => setHostEmail(e.target.value)} placeholder="host@example.com" />
           </div>
           <div className="form-actions">
             <button className="btn" type="submit" disabled={creatingHost || !hostEmail.trim()}>
-              {creatingHost ? 'Creating…' : 'Add host'}
+              {creatingHost ? t('Creating…') : t('Add host')}
             </button>
           </div>
         </form>
         {hosts.length === 0 ? (
-          <p className="muted">No hosts yet.</p>
+          <p className="muted">{t('No hosts yet.')}</p>
         ) : (
           <ul className="list">
             {hosts.map((h) => (
@@ -372,22 +378,22 @@ export default function StructureDetailPage() {
                     <span className="row-title">{h.email}</span>
                     <span className="row-sub">
                       <span className={`badge badge-${h.is_active ? 'active' : 'revoked'}`}>
-                        {h.is_active ? 'active' : 'disabled'}
+                        {h.is_active ? t('active') : t('disabled')}
                       </span>
-                      {h.must_change_password ? ' · awaiting password change' : ''}
+                      {h.must_change_password ? ` · ${t('awaiting password change')}` : ''}
                     </span>
                   </div>
                   <div className="row-actions">
                     <button className="btn btn-ghost btn-sm" onClick={() => handleToggleHost(h)}>
-                      {h.is_active ? 'Disable' : 'Enable'}
+                      {h.is_active ? t('Disable') : t('Enable')}
                     </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => handleResetPassword(h.id)}>Reset password</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDeleteHost(h.id)}>Delete</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleResetPassword(h.id)}>{t('Reset password')}</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDeleteHost(h.id)}>{t('Delete')}</button>
                   </div>
                 </div>
                 {tempPassword?.hostId === h.id && (
                   <p className="temp-password">
-                    Temporary password (shown once): <code>{tempPassword.password}</code>
+                    {t('Temporary password (shown once):')} <code>{tempPassword.password}</code>
                   </p>
                 )}
               </li>
@@ -397,38 +403,40 @@ export default function StructureDetailPage() {
       </section>
 
       <section className="card">
-        <h2>Shared documents (whole structure)</h2>
+        <h2>{t('Shared documents (whole structure)')}</h2>
         <form className="form" onSubmit={handleUpload}>
           <div className="form-row">
-            <label htmlFor="docFile">Upload a document (PDF, DOCX, TXT, MD, HTML…)</label>
+            <label htmlFor="docFile">{t('Upload a document (PDF, DOCX, TXT, MD, HTML…)')}</label>
             <input id="docFile" type="file" className="input" onChange={(e) => setDocFile(e.target.files[0] || null)} />
           </div>
           <div className="form-actions">
             <button className="btn" type="submit" disabled={uploading || !docFile}>
-              {uploading ? 'Uploading…' : 'Upload'}
+              {uploading ? t('Uploading…') : t('Upload')}
             </button>
           </div>
         </form>
         {documents.length === 0 ? (
-          <p className="muted">No shared documents yet.</p>
+          <p className="muted">{t('No shared documents yet.')}</p>
         ) : (
           <ul className="list">
             {documents.map((d) => (
-              <li className="row" key={d.id} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                <div className="row" style={{ border: 'none', padding: 0, background: 'transparent' }}>
-                  <div className="row-main">
-                    <span className="row-title">{d.original_filename}</span>
-                    <span className="row-sub">
-                      {d.file_type} {statusBadge(d.status)}
-                      {d.error_message ? ` · ${d.error_message}` : ''}
-                    </span>
-                  </div>
-                  <div className="row-actions">
-                    <DocumentText docId={d.id} fetchContent={getDocumentContent} />
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDeleteDoc(d.id)}>Delete</button>
-                  </div>
-                </div>
-              </li>
+              <DocumentRow
+                key={d.id}
+                docId={d.id}
+                fetchContent={getDocumentContent}
+                title={d.original_filename}
+                subtitle={
+                  <>
+                    {d.file_type} <StatusBadge status={d.status} />
+                    {d.error_message ? ` · ${d.error_message}` : ''}
+                  </>
+                }
+                actions={
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDeleteDoc(d.id)}>
+                    {t('Delete')}
+                  </button>
+                }
+              />
             ))}
           </ul>
         )}

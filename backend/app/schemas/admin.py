@@ -1,7 +1,7 @@
 """Request/response schemas for the admin API."""
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -45,6 +45,7 @@ class AdminStatsOut(BaseModel):
     units: int
     active_links: int
     open_change_requests: int
+    new_visit_requests: int = 0
 
 
 # ── structure ───────────────────────────────────────────────────────────────────
@@ -268,6 +269,29 @@ class ChangeRequestAdminOut(BaseModel):
 
 class ChangeRequestUpdate(BaseModel):
     status: str = Field(..., pattern="^(open|resolved)$")
+    admin_note: str | None = None
+
+
+# ── visit requests (leads from the public landing) ─────────────────────────────
+
+class VisitRequestAdminOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    structure_name: str
+    city: str | None
+    business_type: str | None
+    contact_name: str
+    contact_email: str
+    preferred_date: date | None
+    status: str
+    admin_note: str | None
+    handled_at: datetime | None
+    created_at: datetime
+
+
+class VisitRequestUpdate(BaseModel):
+    status: str = Field(..., pattern="^(new|contacted|archived)$")
     admin_note: str | None = None
 
 

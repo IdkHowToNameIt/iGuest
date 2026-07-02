@@ -1,46 +1,58 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
-import { getStats, listStructures, listChangeRequests } from '../adminApi.js'
+import { getStats, listStructures, listChangeRequests, getAnalytics } from '../adminApi.js'
 import { useAuth } from '../auth.jsx'
 import Icon from '../../components/Icon.jsx'
 import DashboardGrid, { resetLayout } from '../../components/DashboardGrid.jsx'
+import { useT } from '../../i18n/index.jsx'
 
-const LAYOUT_KEY = 'iguest_admin_dashboard_layout_v2'
+const LAYOUT_KEY = 'iguest_admin_dashboard_layout_v3'
 const DEFAULT_LAYOUT = [
   { i: 'overview', x: 0, y: 0, w: 12, h: 3 },
   { i: 'recentStructures', x: 0, y: 3, w: 7, h: 8 },
   { i: 'openChangeRequests', x: 7, y: 3, w: 5, h: 8 },
-  { i: 'quickActions', x: 0, y: 11, w: 12, h: 4 },
+  { i: 'questionCategories', x: 0, y: 11, w: 7, h: 8 },
+  { i: 'quickActions', x: 7, y: 11, w: 5, h: 8 },
 ]
 
-function locationLine(s) {
+// Gradient fills for the "what guests ask" category bars (cycled).
+const BAR_COLORS = [
+  'linear-gradient(90deg,#9d66ff,#6b3bff)',
+  'linear-gradient(90deg,#4fd3c2,#14a08f)',
+  'linear-gradient(90deg,#6f9dff,#2f6fed)',
+  'linear-gradient(90deg,#f0a04e,#e07c1f)',
+]
+
+function locationLine(s, t) {
   const parts = [s.city, s.province, s.region].filter(Boolean)
-  return parts.length ? parts.join(' Â· ') : 'No location set'
+  return parts.length ? parts.join(' · ') : t('No location set')
 }
 
-// Compact relative timestamp for the activity feed ("5m ago", "2h ago", â€¦).
-function timeAgo(iso) {
+// Compact relative timestamp for the activity feed ("5m ago", "2h ago", …).
+function timeAgo(iso, t) {
   const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return t('just now')
   const minutes = seconds / 60
-  if (minutes < 60) return `${Math.floor(minutes)}m ago`
+  if (minutes < 60) return t('{n}m ago', { n: Math.floor(minutes) })
   const hours = minutes / 60
-  if (hours < 24) return `${Math.floor(hours)}h ago`
+  if (hours < 24) return t('{n}h ago', { n: Math.floor(hours) })
   const days = hours / 24
-  if (days < 7) return `${Math.floor(days)}d ago`
+  if (days < 7) return t('{n}d ago', { n: Math.floor(days) })
   return new Date(iso).toLocaleDateString()
 }
 
 // The admin's home: dashboard overview built from free-form blocks (see
-// DashboardGrid) â€” drag/resize is available via "Customize layout".
+// DashboardGrid) — drag/resize is available via "Customize layout".
 export default function AdminDashboardPage() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const { t } = useT()
   const { profile } = useOutletContext() ?? {}
 
   const [stats, setStats] = useState(null)
   const [recentStructures, setRecentStructures] = useState([])
   const [openRequests, setOpenRequests] = useState([])
+  const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [customizing, setCustomizing] = useState(false)
@@ -58,14 +70,16 @@ export default function AdminDashboardPage() {
   async function refresh() {
     setLoading(true)
     try {
-      const [s, structures, requests] = await Promise.all([
+      const [s, structures, requests, a] = await Promise.all([
         getStats(),
         listStructures({}),
         listChangeRequests({ status: 'open' }),
+        getAnalytics(),
       ])
       setStats(s)
       setRecentStructures(structures.slice(-6).reverse())
       setOpenRequests(requests.slice(0, 6))
+      setAnalytics(a)
       setError(null)
     } catch (err) {
       if (!handleAuthError(err)) setError(err.message)
@@ -84,7 +98,7 @@ export default function AdminDashboardPage() {
     setLayoutVersion((v) => v + 1)
   }
 
-  if (loading) return <p className="muted">Loadingâ€¦</p>
+  if (loading) return <p className="muted">{t('Loading…')}</p>
   if (error) return <p className="error-text">{error}</p>
 
   const statCards = [
@@ -125,21 +139,21 @@ export default function AdminDashboardPage() {
   const blocks = [
     {
       key: 'overview',
-      title: 'Overview',
+      title: t('Overview'),
       bare: true,
       content: (
         <div className="stat-grid" style={{ height: '100%', alignContent: 'start' }}>
           {statCards.map((c) => (
             <div className="stat-card" key={c.label}>
               <div className="stat-card-top">
-                <span className="stat-card-label">{c.label}</span>
+                <span className="stat-card-label">{t(c.label)}</span>
                 <span className={`chip${c.tone}`}>
                   <Icon name={c.icon} size={19} />
                 </span>
               </div>
               <span className="stat-card-value">{c.value}</span>
               <Link className="stat-card-link" to={c.to}>
-                {c.linkLabel} <Icon name="arrow-right" size={13} />
+                {t(c.linkLabel)} <Icon name="arrow-right" size={13} />
               </Link>
             </div>
           ))}
@@ -148,16 +162,16 @@ export default function AdminDashboardPage() {
     },
     {
       key: 'recentStructures',
-      title: 'Recent structures',
+      title: t('Recent structures'),
       content: (
         <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h2 style={{ fontSize: 17 }}>Recent structures</h2>
+          <h2 style={{ fontSize: 17 }}>{t('Recent structures')}</h2>
           {recentStructures.length === 0 ? (
             <div className="empty-state">
               <span className="chip chip-round">
                 <Icon name="building" size={20} />
               </span>
-              No structures yet â€” create your first one to get started.
+              {t('No structures yet — create your first one to get started.')}
             </div>
           ) : (
             <ul className="activity-list">
@@ -171,11 +185,11 @@ export default function AdminDashboardPage() {
                       <Link to={`/admin/structures/${s.id}`}>{s.name}</Link>
                     </span>
                     <span className="activity-sub">
-                      <Icon name="map-pin" size={12} /> {locationLine(s)}
+                      <Icon name="map-pin" size={12} /> {locationLine(s, t)}
                     </span>
                   </div>
                   <Link className="btn btn-ghost btn-sm" to={`/admin/structures/${s.id}`}>
-                    Open
+                    {t('Open')}
                   </Link>
                 </li>
               ))}
@@ -186,13 +200,13 @@ export default function AdminDashboardPage() {
     },
     {
       key: 'openChangeRequests',
-      title: 'Recent activity',
+      title: t('Recent activity'),
       content: (
         <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="page-head">
-            <h2 style={{ fontSize: 17 }}>Recent activity</h2>
+            <h2 style={{ fontSize: 17 }}>{t('Recent activity')}</h2>
             <Link className="btn btn-ghost btn-sm" to="/admin/change-requests">
-              View all
+              {t('View all')}
             </Link>
           </div>
           {openRequests.length === 0 ? (
@@ -200,7 +214,7 @@ export default function AdminDashboardPage() {
               <span className="chip chip-round tone-2">
                 <Icon name="check" size={20} />
               </span>
-              All caught up â€” no open change requests.
+              {t('All caught up — no open change requests.')}
             </div>
           ) : (
             <ul className="activity-list">
@@ -212,15 +226,15 @@ export default function AdminDashboardPage() {
                   <div className="activity-main">
                     <span className="activity-title">
                       <Link to={`/admin/structures/${r.structure_id}`}>
-                        {r.structure_name || 'structure'}
+                        {r.structure_name || t('structure')}
                       </Link>
                     </span>
                     <span className="activity-sub">
-                      {r.document_id ? 'Document change request' : r.title || 'Request'} Â·{' '}
-                      {r.host_email || 'host removed'}
+                      {r.document_id ? t('Document change request') : r.title || t('Request')} ·{' '}
+                      {r.host_email || t('host removed')}
                     </span>
                   </div>
-                  <span className="activity-time">{timeAgo(r.created_at)}</span>
+                  <span className="activity-time">{timeAgo(r.created_at, t)}</span>
                 </li>
               ))}
             </ul>
@@ -229,28 +243,74 @@ export default function AdminDashboardPage() {
       ),
     },
     {
+      key: 'questionCategories',
+      title: t('What guests ask'),
+      content: (
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="page-head">
+            <h2 style={{ fontSize: 17 }}>{t('What guests ask')}</h2>
+            <span className="muted">{t('{n} questions', { n: analytics?.total || 0 })}</span>
+          </div>
+          {!analytics || analytics.total === 0 ? (
+            <div className="empty-state">
+              <span className="chip chip-round tone-3">
+                <Icon name="message-circle" size={20} />
+              </span>
+              {t('No guest questions yet — categories appear here as guests start asking.')}
+            </div>
+          ) : (
+            <div className="qcat-list">
+              {analytics.categories.map((cat, i) => {
+                const maxCount = analytics.categories[0]?.count || 1
+                return (
+                  <div className="qcat" key={cat.label}>
+                    <div className="qcat-head">
+                      <span className="qcat-label">{cat.label}</span>
+                      <span className="muted">
+                        {cat.count} · {Math.round(cat.share * 100)}%
+                      </span>
+                    </div>
+                    <div className="qbar">
+                      <span
+                        className="qbar-fill"
+                        style={{
+                          width: `${Math.max(6, Math.round((cat.count / maxCount) * 100))}%`,
+                          background: BAR_COLORS[i % BAR_COLORS.length],
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      ),
+    },
+    {
       key: 'quickActions',
-      title: 'Quick actions',
+      title: t('Quick actions'),
       bare: true,
       content: (
         <section
           className="card card-promo"
           style={{ height: '100%', justifyContent: 'center' }}
         >
-          <h2>Set up a new property</h2>
+          <h2>{t('Set up a new property')}</h2>
           <p className="muted">
-            Create a structure, add its units and manuals, then share a guest link â€” the
-            assistant answers from those documents only.
+            {t(
+              'Create a structure, add its units and manuals, then share a guest link — the assistant answers from those documents only.',
+            )}
           </p>
           <div className="form-actions">
             <Link className="btn btn-ghost btn-sm" to="/admin/structures">
-              <Icon name="plus" size={14} /> New structure
+              <Icon name="plus" size={14} /> {t('New structure')}
             </Link>
             <Link className="btn btn-ghost btn-sm" to="/admin/change-requests">
-              <Icon name="clipboard" size={14} /> Change requests
+              <Icon name="clipboard" size={14} /> {t('Change requests')}
             </Link>
             <Link className="btn btn-ghost btn-sm" to="/admin/profile">
-              <Icon name="user" size={14} /> Profile settings
+              <Icon name="user" size={14} /> {t('Profile settings')}
             </Link>
           </div>
         </section>
@@ -262,21 +322,21 @@ export default function AdminDashboardPage() {
     <>
       <div className="page-head">
         <div>
-          <h1>Welcome back, {profile?.display_name || 'Admin'}</h1>
-          <p className="page-hero-sub">Here's what is happening across your properties.</p>
+          <h1>{t('Welcome back, {name}', { name: profile?.display_name || t('Admin') })}</h1>
+          <p className="page-hero-sub">{t("Here's what is happening across your properties.")}</p>
         </div>
         <button
           className={`btn btn-sm${customizing ? '' : ' btn-ghost'}`}
           onClick={() => setCustomizing((v) => !v)}
         >
           <Icon name={customizing ? 'check' : 'grip'} size={14} />{' '}
-          {customizing ? 'Done arranging' : 'Customize layout'}
+          {customizing ? t('Done arranging') : t('Customize layout')}
         </button>
       </div>
       {customizing && (
         <div className="form-actions">
           <button className="btn btn-ghost btn-sm" onClick={handleResetLayout}>
-            Reset layout to default
+            {t('Reset layout to default')}
           </button>
         </div>
       )}

@@ -61,6 +61,18 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "http://localhost:5173"
 
+    # Visit-request notifications (leads from the public landing page). Optional:
+    # when an SMTP host is configured, each new lead is emailed to
+    # ``visit_request_notify_email``; otherwise it is just stored + logged. Demo
+    # deployments can leave these blank and read the leads in the admin inbox.
+    visit_request_notify_email: str = ""
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_use_tls: bool = True
+
     @property
     def database_url(self) -> str:
         # postgresql+psycopg:// uses psycopg v3, which supports Python 3.11+

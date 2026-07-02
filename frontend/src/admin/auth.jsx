@@ -4,8 +4,8 @@ import { getToken, setToken, login as apiLogin } from './adminApi.js'
 
 // Auth context for the admin panel. The JWT lives in localStorage (see
 // adminApi.js); additionally we remember whether the caller must change their
-// (initially temporary) password â€” only ever true for a DB-backed admin
-// account created from the panel, never for the legacy .env admin â€” so the
+// (initially temporary) password — only ever true for a DB-backed admin
+// account created from the panel, never for the legacy .env admin — so the
 // guard can force that step first, mirroring the host portal's flow.
 
 const MUST_CHANGE_KEY = 'iguest_admin_must_change'

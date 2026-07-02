@@ -71,9 +71,13 @@ salvare il file. Il rebuild (`--build`) serve **solo** quando cambiano le dipend
 rimuove i container (aggiungi `-v` per eliminare anche il volume del database).
 
 Una volta avviato:
+- **Landing pubblica (home)**: <http://localhost:5173/> â€” sito vetrina multilingua
+  (IT/EN) con anteprima chat e form **"Prenota una visita"** (i lead finiscono
+  nell'inbox admin â†’ *Requests â†’ Visit requests*).
 - Chat ospite: `http://localhost:5173/c/<token>`
-- Pannello admin: <http://localhost:5173/admin>
-- Portale host: <http://localhost:5173/host>
+- Portale host: <http://localhost:5173/host> (link "Accedi" anche dalla landing)
+- Pannello admin: <http://localhost:5173/admin> â€” **non linkato** dalla landing
+  (raggiungibile solo via URL, protetto dal login admin)
 - Docs API: <http://localhost:8000/docs> Â· health: `GET http://localhost:8000/health`
 
 ---
