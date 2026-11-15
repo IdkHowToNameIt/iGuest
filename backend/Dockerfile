@@ -13,5 +13,7 @@ COPY . .
 
 EXPOSE 8000
 
-# Apply migrations, then serve. --reload picks up edits from the mounted source.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+# Local dev (docker-compose): apply migrations, then serve with hot-reload.
+# In production (Render) migrations run via the Pre-Deploy Command instead,
+# and $PORT is injected by the platform.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload"]

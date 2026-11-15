@@ -1,359 +1,352 @@
 # iGuest
 
-Chatbot RAG multilingua per ospiti di affitti brevi (Airbnb, Booking, â€¦).
-L'ospite apre un link univoco, fa domande sull'alloggio e il bot risponde **solo**
-attingendo al manuale digitale di quella struttura, nella lingua dell'ospite.
-Un pannello admin gestisce strutture, unitÃ , documenti, link e conversazioni.
+**Chatbot RAG multilingua per ospiti di affitti brevi.** L'ospite apre un link
+univoco, chiede qualsiasi cosa sull'alloggio e riceve una risposta nella sua
+lingua, generata **solo** dal manuale digitale della struttura. Un pannello admin
+gestisce strutture, unità, documenti, link e conversazioni; un portale host dà al
+gestore una vista in sola lettura su documenti, FAQ e analytics.
 
-- **Backend**: Python 3.11+, FastAPI, SQLAlchemy, Alembic
-- **Database**: PostgreSQL + `pgvector` (dati relazionali + embeddings insieme)
-- **AI**: Google Gemini (embeddings + generazione) via Google AI Studio
-- **Frontend**: React + Vite (chat ospite + pannello admin)
+Progetto realizzato durante un corso di Generative AI / vibe coding, con vincolo
+di **budget zero**: solo strumenti gratuiti e open source.
 
----
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-4169E1?logo=postgresql&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2?logo=google&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker%20Compose-3%20servizi-2496ED?logo=docker&logoColor=white)
 
-## 1. Prerequisiti
+![Landing page di iGuest](docs/screenshots/landing.png)
 
-| Strumento | Versione | Note |
-|-----------|----------|------|
-| Docker Desktop | ultima | esegue PostgreSQL + pgvector (e, in modalitÃ  consigliata, anche backend e frontend) |
-| Python | 3.11+ | testato su 3.14 (serve solo per la modalitÃ  locale) |
-| Node.js | 18+ | per il frontend (serve solo per la modalitÃ  locale) |
-| Chiave API Gemini | â€” | gratuita su <https://aistudio.google.com/> |
-
-> Tutte le dipendenze sono gratuite / open-source. L'unico servizio esterno Ã¨
-> Google Gemini (il piano gratuito Ã¨ sufficiente per una demo).
+<p align="center">
+  <img src="docs/screenshots/demo.gif" width="420" alt="Demo della chat ospite: domanda e risposta generata dal manuale" />
+</p>
 
 ---
 
-## 2. Configura l'ambiente (serve per entrambe le modalitÃ )
+## Indice
+
+1. [Cosa fa](#cosa-fa)
+2. [Come funziona il RAG](#come-funziona-il-rag)
+3. [Avvio rapido](#avvio-rapido)
+4. [Dati demo inclusi](#dati-demo-inclusi)
+5. [Screenshot](#screenshot)
+6. [Struttura del progetto](#struttura-del-progetto)
+7. [Configurazione](#configurazione)
+8. [API](#api)
+9. [Test e controlli](#test-e-controlli)
+10. [Privacy e GDPR](#privacy-e-gdpr)
+11. [Note e limiti noti](#note-e-limiti-noti)
+12. [English summary](#english-summary)
+
+---
+
+## Cosa fa
+
+- **Chat ospite via link** — un capability URL per prenotazione, senza login e
+  senza dati personali; il token è casuale (256 bit) e revocabile in un clic.
+- **Risposte solo dal manuale** — niente invenzioni: se l'informazione non c'è,
+  il bot lascia il recapito del titolare; le domande fuori tema vengono declinate.
+- **Multilingua reale** — la domanda può essere in italiano, inglese, francese,
+  arabo o giapponese: il modello legge il contesto in qualsiasi lingua e risponde
+  in quella dell'ospite.
+- **Ingestion documenti** — PDF, DOCX, TXT, MD, CSV, HTML → testo → chunk →
+  embedding Gemini → `pgvector`. Il testo estratto resta leggibile anche se
+  l'indicizzazione fallisce.
+- **Pannello admin** — strutture con ricerca/filtri geografici, unità, documenti,
+  link ospite con QR code, conversazioni (con cancellazione GDPR), host, account
+  admin, inbox richieste, analytics delle domande e statistiche.
+- **Portale host** — documentazione della struttura in sola lettura, FAQ,
+  analytics per unità, richieste di modifica all'admin, notifiche e profilo.
+- **Landing pubblica IT/EN** — sito vetrina con anteprima chat e form
+  "Prenota una visita" i cui lead finiscono nell'inbox admin.
+- **Analytics automatiche** — le domande degli ospiti sono raggruppate per
+  similarità e le più frequenti diventano FAQ, ricalcolate in background.
+- **GDPR by design** — nessun dato personale richiesto, retention configurabile
+  (default 30 giorni), purga pianificata, diritto all'oblio.
+
+## Come funziona il RAG
+
+```mermaid
+flowchart LR
+  A[Manuale PDF/DOCX/MD] --> B[Estrazione testo]
+  B --> C[Chunking<br/>800 caratteri, 100 di overlap]
+  C --> D[Embedding Gemini<br/>768 dimensioni]
+  D --> E[(document_chunk<br/>pgvector)]
+
+  G[Domanda ospite] --> H[Embedding query]
+  H --> I[Retrieval dual-scope<br/>unità + struttura, cosine distance]
+  E --> I
+  I --> J{Chunk oltre<br/>RAG_MAX_DISTANCE?}
+  J -->|no, top K| K[Prompt: regole + contesto]
+  K --> L[Gemini 3.5 Flash]
+  L --> M[Risposta nella lingua<br/>dell'ospite + lingua rilevata]
+```
+
+Tre scelte che fanno la differenza:
+
+1. **Retrieval dual-scope** — per un'unità si cercano i suoi chunk *più* quelli
+   condivisi della struttura (`unit_id IS NULL`), così regole della casa e guida
+   alla zona valgono per ogni stanza senza duplicare i documenti.
+2. **Soglia di distanza** (`RAG_MAX_DISTANCE`) — i chunk poco pertinenti vengono
+   scartati: su manuali grandi la coda del top-K è rumore e il modello tende a
+   cucire risposte da sezioni sbagliate.
+3. **Prompt con regole esplicite** — lingua dell'ospite, solo contesto fornito,
+   traduzione di un contesto in lingua diversa, fallback sul recapito del
+   titolare, rifiuto cortese per domande fuori tema, mai chiedere dati personali.
+   La risposta è richiesta in JSON (`answer`, `detected_language`).
+
+Il messaggio dell'ospite è salvato **prima** della chiamata al modello: un rate
+limit o un timeout non fa perdere la domanda, che resta disponibile per analytics
+e FAQ.
+
+## Avvio rapido
+
+Prerequisiti: Docker Desktop, una chiave Gemini gratuita da
+[Google AI Studio](https://aistudio.google.com/). Python 3.11+ e Node 18+ servono
+solo per eseguire i processi fuori da Docker.
 
 ```bash
-# config backend â€” imposta la chiave Gemini e le credenziali admin
+# 1. configurazione (la chiave NON va committata)
 cp backend/.env.example backend/.env
+#    imposta GEMINI_API_KEY, ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_JWT_SECRET
 
-# config frontend â€” lascia il default se il backend Ã¨ sulla :8000
-cp frontend/.env.example frontend/.env
+# 2. avvio: database + backend + frontend
+docker compose up --build -d
+
+# 3. dati demo (struttura, 2 unità, 4 manuali, link ospite)
+docker compose exec backend python scripts/seed_demo.py --reset
 ```
 
-Modifica `backend/.env` e imposta almeno:
+Il seed stampa un link tipo `http://localhost:5174/c/<token>`: aprilo e prova la
+chat. Servizi disponibili:
 
-- `GEMINI_API_KEY` â€” la tua chiave di Google AI Studio (**obbligatoria** per embeddings/risposte)
-- `ADMIN_USERNAME` / `ADMIN_PASSWORD` â€” le credenziali admin (cambia i default!)
-- `ADMIN_JWT_SECRET` â€” una stringa lunga e casuale, es.
-  `python -c "import secrets; print(secrets.token_urlsafe(48))"`
+| URL | Cosa |
+|-----|------|
+| <http://localhost:5174/> | Landing pubblica (IT/EN) con form "Prenota una visita" |
+| `http://localhost:5174/c/<token>` | Chat ospite (link stampato dal seed) |
+| <http://localhost:5174/admin> | Pannello admin (login da `backend/.env`) |
+| <http://localhost:5174/host> | Portale host |
+| <http://localhost:8000/docs> | Documentazione API (Swagger) |
+| <http://localhost:8000/health> | Health check |
 
-> Lascia `POSTGRES_HOST=localhost` in `backend/.env`. In modalitÃ  Docker Compose
-> lo sovrascrive automaticamente a `db` â€” non serve modificarlo.
+Backend e frontend montano il codice come volume: le modifiche si ricaricano a
+caldo. Il rebuild serve solo quando cambiano le dipendenze. Per fermare tutto:
+`docker compose down` (`-v` cancella anche il volume del database).
 
----
-
-## 3. Avvia tutto con Docker (consigliato â€” un solo comando)
-
-Dalla radice del repository:
-
-```bash
-docker compose up --build
-```
-
-Tutto qui. Compose costruisce e avvia **tre servizi**:
-
-| Servizio | Immagine | Porta | Note |
-|----------|----------|-------|------|
-| `db` | `pgvector/pgvector:pg16` (scaricata) | 5432 | PostgreSQL + pgvector |
-| `backend` | costruita da `backend/Dockerfile` | 8000 | esegue `alembic upgrade head`, poi uvicorn |
-| `frontend` | costruita da `frontend/Dockerfile` | 5173 | dev server Vite |
-
-Backend e frontend montano il tuo codice sorgente come volume, quindi **le modifiche
-si ricaricano a caldo** senza rebuild: **non devi nÃ© stoppare nÃ© riavviare**, basta
-salvare il file. Il rebuild (`--build`) serve **solo** quando cambiano le dipendenze
-(`requirements.txt` o `package.json`). Ferma con `Ctrl+C`; `docker compose down`
-rimuove i container (aggiungi `-v` per eliminare anche il volume del database).
-
-Una volta avviato:
-- **Landing pubblica (home)**: <http://localhost:5173/> â€” sito vetrina multilingua
-  (IT/EN) con anteprima chat e form **"Prenota una visita"** (i lead finiscono
-  nell'inbox admin â†’ *Requests â†’ Visit requests*).
-- Chat ospite: `http://localhost:5173/c/<token>`
-- Portale host: <http://localhost:5173/host> (link "Accedi" anche dalla landing)
-- Pannello admin: <http://localhost:5173/admin> â€” **non linkato** dalla landing
-  (raggiungibile solo via URL, protetto dal login admin)
-- Docs API: <http://localhost:8000/docs> Â· health: `GET http://localhost:8000/health`
-
----
-
-## 4. Alternativa: backend/frontend in locale (DB su Docker)
-
-Preferisci eseguire i processi dell'app sulla tua macchina (es. per un debugger
-nativo)? Avvia solo il database su Docker, poi le due app in locale:
+### Senza Docker per backend/frontend
 
 ```bash
-# 4.1 â€” solo database
-docker compose up -d db
+docker compose up -d db          # solo PostgreSQL + pgvector
 
-# 4.2 â€” backend
 cd backend
-python -m venv .venv
-.venv\Scripts\activate        # Windows  (macOS/Linux: source .venv/bin/activate)
+python -m venv .venv && .venv\Scripts\activate     # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 alembic upgrade head
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --port 8000
 
-# 4.3 â€” frontend (in un secondo terminale)
-cd frontend
-npm install
-npm run dev
+cd frontend && npm install && npm run dev          # http://localhost:5173
 ```
 
-Stessi URL di sopra (frontend su :5173, backend su :8000).
+## Dati demo inclusi
 
----
+La cartella [`samples/`](samples/README.md) contiene i manuali **fittizi** di
+*Casa Sole*, un B&B a Firenze con due unità. Sono scritti apposta in due lingue
+per verificare il comportamento cross-lingua del RAG.
 
-## 5. Primo utilizzo (pannello admin)
+| File | Scope | Contenuto |
+|------|-------|-----------|
+| `house-rules.it.md` | struttura | check-in/out, Wi-Fi, colazione, silenzio, animali, parcheggio, rifiuti, sicurezza |
+| `local-guide.it.md` | struttura | trasporti, ristoranti, supermercati, musei, numeri utili |
+| `suite-giardino.it.md` | unità (IT) | dotazioni, cucina, doccia, cassaforte, checklist di check-out |
+| `olive-room.en.md` | unità (EN) | manuale della Camera Oliva in inglese |
 
-1. Apri <http://localhost:5173/admin> â†’ accedi con `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
-2. **Crea una struttura**: nome, lingua ospite (BCP-47, es. `it`), recapito del titolare,
-   piÃ¹ **posizione** opzionale (regione â†’ provincia â†’ cittÃ , da menu a cascata) e
-   **recapiti host** solo-admin (nome / telefono / email â€” per raggiungere il gestore).
-3. La pagina strutture Ã¨ una griglia di gestione: **cerca** per nome/cittÃ /provincia/regione
-   e **filtra** per regione/provincia/cittÃ  (combinabili). Apri una struttura per modificarne
-   dettagli, posizione, recapiti e il **messaggio di benvenuto del bot** (testo libero mostrato
-   all'ospite in apertura chat al posto del saluto automatico per lingua; lascialo vuoto per
-   usare quello di default).
-4. Apri la struttura â†’ **crea un'unitÃ ** (es. "Stanza 1").
-5. Carica un documento (il tuo manuale: PDF, DOCX, TXT, MD, HTMLâ€¦) sulla struttura
-   (*condiviso*) o su un'unitÃ . Lo stato passa a `processed` una volta suddiviso in chunk
-   ed embeddato. Usa **View text** per leggere in-app il testo estratto del documento,
-   reso come blocchi formattati e leggibili (paragrafi + titoli in stile Markdown). Il testo
-   estratto viene salvato *prima* dell'embedding, cosÃ¬ il manuale resta visualizzabile anche
-   se l'indicizzazione fallisce (il documento mostra allora `error` con il motivo, ma resta
-   leggibile).
-6. **Genera un link ospite** (opzionalmente con una finestra di validitÃ ) â†’ **Copia** il link.
-7. Apri il link copiato in un browser per chattare come ospite.
-8. Le conversazioni compaiono sotto l'unitÃ ; puoi aprirle ed **eliminare i dati** (GDPR).
-   **Revocare un link lo elimina definitivamente** (insieme alla sua chat): sparisce dalla
-   lista e il token smette di funzionare (l'ospite vede "link non trovato").
-   La pagina dell'unitÃ  mostra le **analytics delle domande**; le **richieste di modifica**
-   degli host arrivano nella casella *Change requests* dell'admin (menu in alto), filtrabili
-   per stato e per tipo (legate a un documento oppure "other").
-9. *(opzionale)* Nella pagina della struttura, **aggiungi un host** (la sua email): una
-   password temporanea viene mostrata una sola volta â€” condividila in modo sicuro.
+Il seed ingerisce i quattro file con gli embedding reali (29 chunk) e crea il link
+ospite. Esempi di risposte verificate con il demo in esecuzione:
 
-> Il bot risponde esclusivamente in base ai documenti caricati. Se una domanda Ã¨ in tema
-> ma non coperta, fornisce il recapito del titolare; le domande fuori tema vengono declinate
-> cortesemente.
+| Domanda | Lingua | Risposta (estratto) |
+|---------|--------|---------------------|
+| *A che ora è il check-in?* | IT | «Il check-in è dalle 15:00 alle 20:00. Per un arrivo tra le 20:00 e le 23:00 è necessario richiedere il check-in tardivo (supplemento di 15 €)…» |
+| *What's the Wi-Fi password?* | EN | «The Wi-Fi password is `oliva2026`. It is the same password for both the CasaSole-Guest network and the 5 GHz network (CasaSole-Guest-5G).» |
+| *Dove posso parcheggiare?* | IT | «Ogni alloggio dispone di un posto auto gratuito in Via delle Rose 8, dietro il cancello bianco…» |
 
-La schermata di apertura per l'ospite avvisa inoltre che la chat Ã¨ **temporanea**: l'accesso
-viene revocato e l'intera conversazione eliminata al termine del soggiorno. Gli ospiti che
-tornano rivedono i messaggi precedenti, caricati da `GET /api/guest/{token}/history` â€” questa
-cronologia Ã¨ transitoria e sparisce all'eliminazione del link / con la purga di retention.
+La seconda domanda è la prova del comportamento cross-lingua: domanda in inglese,
+contesto (regole della casa) in italiano, risposta tradotta in inglese.
 
-### Portale host
-
-Un host (creato dall'admin e associato a una **struttura**) accede su `/host` con email +
-password temporanea, Ã¨ obbligato a impostare una nuova password al primo accesso, e puÃ² poi
-leggere tutta la documentazione della struttura (sola lettura, su tutte le sue unitÃ  â€” con
-**View text**, che apre il testo estratto in un pop-up a schermo pieno), vedere FAQ/analytics
-e inviare all'admin **richieste di modifica** dei documenti.
-
-Il widget **"What guests ask"** ha una tab **General** (tutta la struttura) piÃ¹ una tab per
-ogni unitÃ /stanza, ciascuna con le categorie di domande e il relativo drill-down per singola
-domanda. Analytics e FAQ sono ricalcolate automaticamente ogni pochi minuti da uno scheduler
-interno al backend (vedi GDPR/operativitÃ  sotto) â€” non serve lanciare nulla a mano.
-
-Le richieste di modifica possono riferirsi a un documento specifico oppure a **"Other"** (un
-problema diverso, per cui l'host scrive un titolo). Sono mostrate in due sezioni a scomparsa,
-**In progress** e **Resolved**; una volta risolte mostrano la nota lasciata dall'admin,
-firmata con il suo nome visualizzato (o "Admin" se non l'ha impostato). Dal tasto
-**âš™ Settings** l'host puÃ² **riordinare le sezioni** della dashboard (salvato nel browser),
-cambiare la **foto profilo** (cliccaci sopra per vederla ingrandita) e attivare le
-**notifiche** quando l'admin risolve una sua richiesta.
-
-### Dati di localizzazione
-
-Regione/provincia/cittÃ  provengono da un dataset geografico italiano statico incluso lato
-server (`backend/app/data/geo_it.json`, ~7,9k comuni) ed esposto tramite gli endpoint
-pubblici a cascata `GET /api/geo/regions|provinces?region=|cities?province=`. Il frontend
-scarica solo la fetta che serve, cosÃ¬ il bundle della SPA resta leggero e non c'Ã¨ inserimento
-dati a mano.
-
----
-
-## 6. Script demo di avvio rapido
-
-Crea una struttura + unitÃ  + link ospite attivo in un colpo solo e stampa l'URL ospite.
-**Non** inventa alcun contenuto â€” passi tu i tuoi valori:
+Per creare anche un account host durante il seed (password temporanea stampata una
+sola volta):
 
 ```bash
-cd backend
-python scripts/demo_seed.py \
-  --name "My B&B" \
-  --country-language it \
-  --owner-contact "info@mybnb.example" \
-  --unit-name "Room 1" \
-  --document /path/to/your/manual.pdf      # opzionale; richiede GEMINI_API_KEY
+docker compose exec backend python scripts/seed_demo.py --reset \
+  --host-email host@casasole.example
 ```
 
-Stampa un link pronto da aprire tipo `http://localhost:5173/c/<token>`.
+Per caricare i tuoi documenti: pannello admin → struttura o unità → *Carica un
+documento*. In alternativa `backend/scripts/demo_ingestion.py` ingerisce un
+singolo file da riga di comando.
 
----
+## Screenshot
 
-## 7. GDPR / privacy
+| Chat ospite (desktop) | Chat ospite (mobile) |
+|---|---|
+| ![Chat ospite](docs/screenshots/guest-chat.png) | ![Chat ospite mobile](docs/screenshots/guest-chat-mobile.png) |
 
-iGuest Ã¨ progettato attorno alla minimizzazione dei dati:
+La schermata di apertura è bilingue, avvisa che i messaggi sono elaborati da un
+provider AI, indica la retention e il recapito del titolare, e ricorda che l'accesso
+è temporaneo.
 
-- **Nessun dato personale Ã¨ richiesto o necessario dagli ospiti.** Sono identificati
-  solo dal token anonimo del link â€” niente nome, email o telefono.
-- **Avviso privacy nella chat**: la schermata di apertura per l'ospite indica che un
-  provider AI (Google Gemini) elabora i messaggi, il periodo di conservazione e il
-  recapito del titolare.
-- **Retention configurabile**: le conversazioni ricevono un timestamp `delete_after` alla
-  creazione (`CONVERSATION_RETENTION_DAYS`, default 30).
-- **Cancellazione automatica pianificata**: il backend esegue una purga in background
-  all'avvio e ogni `RETENTION_PURGE_INTERVAL_SECONDS` (default: giornaliera). Disattivabile
-  con `RETENTION_PURGE_ENABLED=false`. Puoi anche eseguirla manualmente:
-  ```bash
-  python scripts/purge_conversations.py
-  ```
-  (o pianificarla via cron / UtilitÃ  di pianificazione).
-- **Analytics domande & FAQ**: le domande degli ospiti vengono raggruppate nei temi piÃ¹
-  richiesti e alle principali viene generata una risposta, mostrata sia nella chat ospite
-  (`GET /api/guest/{token}/faqs`) sia nelle viste analytics admin/host (per struttura e per
-  singola unitÃ ). Il ricalcolo gira fuori dal percorso della richiesta, in un loop interno
-  al backend avviato all'avvio e ripetuto ogni `FAQ_RECOMPUTE_INTERVAL_SECONDS` (default: 5
-  minuti; disattivabile con `FAQ_RECOMPUTE_ENABLED=false`). Puoi anche lanciarlo a mano, ad
-  es. subito dopo un giro di test:
-  ```bash
-  python scripts/recompute_faqs.py            # tutte le unitÃ 
-  python scripts/recompute_faqs.py --unit-id <uuid>
-  ```
-  Il messaggio di ogni ospite viene salvato **prima** di chiamare il modello di generazione,
-  cosÃ¬ una domanda non va persa anche se la risposta fallisce (es. rate limit di Gemini) â€”
-  resta comunque disponibile per il ricalcolo successivo.
-- **Cronologia ospite temporanea**: un ospite che torna puÃ² rileggere i propri messaggi
-  (`GET /api/guest/{token}/history`), ma la conversazione Ã¨ transitoria â€” cancellata alla
-  revoca del link e dalla purga di retention.
-- **Diritto all'oblio**: un admin puÃ² eliminare qualsiasi conversazione e tutti i suoi
-  messaggi via `DELETE /api/admin/conversations/{id}` (pulsante nel pannello admin).
-  **Revocare un link ospite** (`POST /api/admin/links/{id}/revoke`) elimina definitivamente
-  il link e la chat di quella prenotazione: il token smette immediatamente di funzionare.
-- Per la produzione, ospita in una regione UE e verifica l'impostazione no-training di
-  Gemini / firma il DPA (vedi `CLAUDE.md`).
+| Dashboard admin | Strutture |
+|---|---|
+| ![Dashboard admin](docs/screenshots/admin-dashboard.png) | ![Gestione strutture](docs/screenshots/admin-structures.png) |
 
----
+| Dettaglio struttura | Dettaglio unità |
+|---|---|
+| ![Dettaglio struttura](docs/screenshots/admin-structure.png) | ![Dettaglio unità](docs/screenshots/admin-unit.png) |
 
-## 8. Eseguire i test
+Nella pagina dell'unità convivono documenti (con anteprima del testo estratto),
+link ospite con QR code, conversazioni e analytics delle domande. Tutte le
+immagini sono catturate dall'app in esecuzione con i dati demo di `samples/`.
+
+## Struttura del progetto
+
+```text
+iGuest/
+├── docker-compose.yml           # db + backend + frontend (+ profilo prod nginx)
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # FastAPI + scheduler (retention, FAQ)
+│   │   ├── config.py            # impostazioni da .env
+│   │   ├── models/              # SQLAlchemy: strutture, unità, documenti, chat…
+│   │   ├── routers/             # guest, admin, host, public, geo
+│   │   ├── schemas/             # Pydantic (request/response)
+│   │   ├── services/
+│   │   │   ├── ingestion/       # conversione → chunking → embedding → pipeline
+│   │   │   ├── rag/             # retrieval, prompt, generation, engine
+│   │   │   ├── faq/             # clustering domande, analytics, FAQ
+│   │   │   └── …                # auth, links, chat, retention, upload
+│   │   └── data/geo_it.json     # comuni italiani per i filtri admin
+│   ├── alembic/                 # migrazioni
+│   ├── scripts/                 # seed_demo, demo_seed, purge, recompute_faqs
+│   └── tests/                   # pytest: unit + flussi HTTP/DB
+├── frontend/
+│   ├── src/
+│   │   ├── pages/               # landing, chat ospite
+│   │   ├── admin/               # pannello admin
+│   │   ├── host/                # portale host
+│   │   ├── components/          # componenti condivisi
+│   │   └── i18n/                # copy IT/EN della UI admin
+│   └── nginx.conf               # SPA fallback per la build di produzione
+├── samples/manuals/casa-sole/   # manuali demo (fittizi, IT + EN)
+├── docs/
+│   ├── ARCHITECTURE.md          # modello dati, pipeline, decisioni
+│   ├── screenshots/             # immagini del README + GIF
+│   └── notes/                   # note di sviluppo e devlog
+└── backend/scripts/seed_demo.py # demo completa in un comando
+```
+
+Approfondimenti: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (modello dati,
+pipeline, API, decisioni e compromessi) e [`samples/README.md`](samples/README.md).
+
+## Configurazione
+
+Tutte le impostazioni stanno in `backend/.env` (template completo in
+[`backend/.env.example`](backend/.env.example)). Le principali:
+
+| Variabile | Default | Ruolo |
+|-----------|---------|-------|
+| `GEMINI_API_KEY` | — | **obbligatoria**: embedding + generazione |
+| `EMBEDDING_MODEL` | `models/gemini-embedding-001` | modello di embedding (768 dim) |
+| `GENERATION_MODEL` | `models/gemini-3.5-flash` | modello di generazione |
+| `GENERATION_TIMEOUT_SECONDS` | `60` | timeout per singola chiamata |
+| `CHUNK_SIZE` / `CHUNK_OVERLAP` | `800` / `100` | finestra di chunking |
+| `RAG_TOP_K` | `10` | chunk massimi nel prompt |
+| `RAG_MAX_DISTANCE` | `0.65` | soglia di similarità (0 = disattiva) |
+| `CONVERSATION_RETENTION_DAYS` | `30` | retention GDPR delle chat |
+| `FAQ_RECOMPUTE_INTERVAL_SECONDS` | `300` | ricalcolo analytics/FAQ |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | `iguest` / `iguest` | credenziali admin (cambiarle) |
+| `ADMIN_JWT_SECRET` | — | firma dei token (genera una stringa casuale) |
+| `CORS_ORIGINS` | `http://localhost:5174` | origini frontend ammesse |
+
+Genera il segreto JWT con:
 
 ```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+> **La chiave API non è nel repository.** `backend/.env` è ignorato da Git: per
+> usare il progetto serve la propria chiave. Se hai condiviso una chiave in un
+> file o in una chat, revocala da Google AI Studio e generane una nuova.
+
+## API
+
+| Prefisso | Auth | Contenuto |
+|----------|------|-----------|
+| `/api/guest/{token}/*` | capability token | `opening`, `history`, `faqs`, `chat` |
+| `/api/admin/*` | JWT admin | login, strutture, unità, documenti, link, conversazioni, host, account, richieste, analytics, profilo, statistiche |
+| `/api/host/*` | JWT host | login, documenti della struttura, FAQ/analytics, richieste di modifica, profilo |
+| `/api/public/*` | nessuna | form "prenota una visita" |
+| `/api/geo/*` | nessuna | regioni/province/città italiane (filtri admin) |
+
+Schema interattivo completo: <http://localhost:8000/docs>.
+
+## Test e controlli
+
+```bash
+# backend: unit test + flussi HTTP (senza DB le chiamate live a Gemini sono saltate)
 cd backend
 python -m pytest -q
-```
 
-I test unit/HTTP girano senza database nÃ© chiave API (i test dipendenti da DB e Gemini
-vengono skippati). Per eseguire il flusso completo di integrazione con il Postgres in
-esecuzione:
+# oppure dentro Docker
+docker compose exec backend python -m pytest -q
 
-```bash
-# Windows PowerShell
-$env:RUN_DB_TESTS=1; python -m pytest tests/test_guest_flow_db.py tests/test_admin_flow_db.py -v
-# macOS / Linux
+# flussi di integrazione con il Postgres in esecuzione
 RUN_DB_TESTS=1 python -m pytest tests/test_guest_flow_db.py tests/test_admin_flow_db.py -v
-```
 
-Frontend:
-
-```bash
+# frontend
 cd frontend
-npm run build   # validazione type/JSX + bundle
+npm run build
 npm run lint
 ```
 
----
+I test marcati `live` chiamano davvero Gemini e vengono eseguiti solo se
+`GEMINI_API_KEY` è impostata.
 
-## 9. Struttura del progetto
+## Privacy e GDPR
 
-```
-iGuest/
-â”œâ”€â”€ docker-compose.yml          # db + backend + frontend (un solo comando)
-â”œâ”€â”€ CLAUDE.md                   # decisioni di progetto (fonte di veritÃ )
-â”œâ”€â”€ README.md
-â”œâ”€â”€ backend/
-â”‚   â”œâ”€â”€ Dockerfile              # immagine backend (uvicorn)
-â”‚   â”œâ”€â”€ .env.example
-â”‚   â”œâ”€â”€ requirements.txt
-â”‚   â”œâ”€â”€ alembic/                # migrazioni
-â”‚   â”œâ”€â”€ scripts/
-â”‚   â”‚   â”œâ”€â”€ demo_seed.py        # seed di avvio rapido
-â”‚   â”‚   â”œâ”€â”€ demo_ingestion.py   # ingestione di un singolo file (demo)
-â”‚   â”‚   â”œâ”€â”€ purge_conversations.py  # purga GDPR manuale
-â”‚   â”‚   â””â”€â”€ recompute_faqs.py   # ricostruisce analytics domande + risposte FAQ
-â”‚   â””â”€â”€ app/
-â”‚       â”œâ”€â”€ main.py             # app FastAPI + scheduler di retention e ricalcolo FAQ
-â”‚       â”œâ”€â”€ config.py           # impostazioni da env
-â”‚       â”œâ”€â”€ models/             # modelli SQLAlchemy
-â”‚       â”œâ”€â”€ routers/            # API ospite + admin
-â”‚       â””â”€â”€ services/           # ingestion, RAG, links, chat, retention, auth
-â””â”€â”€ frontend/
-    â”œâ”€â”€ Dockerfile              # immagine frontend dev (dev server Vite)
-    â”œâ”€â”€ Dockerfile.prod         # immagine frontend prod (build statica + nginx)
-    â”œâ”€â”€ nginx.conf              # config nginx con fallback SPA (profilo "prod")
-    â””â”€â”€ src/
-        â”œâ”€â”€ pages/ChatPage.jsx  # chat ospite
-        â””â”€â”€ admin/              # pannello admin (login + gestione)
-```
+- **Nessun dato personale richiesto all'ospite**: l'identità è il token del link.
+- **Avviso privacy in chat**: provider AI, retention, recapito del titolare.
+- **Retention configurabile**: `delete_after` impostato alla creazione della
+  conversazione; purga in background all'avvio e ogni
+  `RETENTION_PURGE_INTERVAL_SECONDS`.
+- **Diritto all'oblio**: l'admin elimina una conversazione e tutti i suoi messaggi
+  dalla UI o via API; revocare un link elimina link e chat.
+- **Provider**: in produzione usare le impostazioni no-training di Gemini, firmare
+  il DPA e ospitare in UE.
 
----
+## Note e limiti noti
 
-## 10. Note & limitazioni
+- **Chiave e modello**: Gemini ritira periodicamente i modelli (durante lo
+  sviluppo `gemini-2.5-flash` è stato dismesso). Se compare un `404 NOT_FOUND`,
+  aggiorna `GENERATION_MODEL` a un modello disponibile per la tua chiave.
+- **Piano gratuito**: quota giornaliera bassa. Esaurita la quota, la chat risponde
+  `503 assistant busy`; il messaggio dell'ospite resta salvato per le analytics.
+- **Nessun OCR**: immagini e PDF senza text layer vengono rifiutati con un errore
+  esplicito, non con testo vuoto.
+- **Chunking** a finestre con confini di paragrafo/frase: buon compromesso per un
+  MVP; un splitter semantico con valutazione quantitativa è il passo successivo.
+- **Un amministratore "storico"** da `.env` più account admin su DB: nessun
+  sistema di ruoli completo, coerente con lo scopo del progetto.
+- **Analytics/FAQ** richiedono almeno 3 FAQ per comparire nella chat
+  (`FAQ_MIN_TO_SHOW`).
 
-- **Docker Ã¨ obbligatorio.** Nella modalitÃ  consigliata esegue tutti e tre i servizi; in
-  modalitÃ  locale esegue comunque il database (pgvector). Senza un daemon Docker attivo,
-  gli endpoint che usano il DB daranno errore.
-- I pin delle dipendenze usano `>=` perchÃ© alcuni pacchetti non avevano wheel per Python 3.14.
-- Il `package-lock.json` Ã¨ cross-platform (include i binari opzionali di tutte le
-  piattaforme), quindi l'immagine Docker del frontend usa `npm ci` per install
-  riproducibili. Se aggiungi/aggiorni dipendenze, rigenera il lock con `npm install`
-  (npm â‰¥ 10) cosÃ¬ resta completo per Windows e Linux.
-- Il frontend Ã¨ una SPA. In sviluppo lo serve Vite; per la **produzione** c'Ã¨ un profilo
-  Compose dedicato che builda il bundle statico e lo serve con **nginx** (con il rewrite
-  che fa risolvere i deep link `/c/...`, `/admin/...`, `/host/...` su `index.html`):
-  ```bash
-  docker compose --profile prod up --build frontend-prod
-  ```
-  Serve il frontend di produzione su <http://localhost:8080> (immagine
-  `frontend/Dockerfile.prod`, config `frontend/nginx.conf`). L'URL del backend Ã¨ iniettato
-  a build-time tramite l'arg `VITE_BACKEND_URL` (default `http://localhost:8000`).
-- L'auth admin Ã¨ un singolo account da `.env` con un JWT â€” pensato per un solo
-  amministratore, senza registrazione pubblica.
-- **Piano gratuito Gemini**: il tier free ha un limite giornaliero basso di chiamate a
-  `generate_content` (es. 20/giorno su `gemini-2.5-flash` al momento della stesura). Superato
-  il limite, la chat ospite risponde con "assistente momentaneamente occupato" (HTTP 503) e le
-  risposte FAQ del ricalcolo automatico falliscono (loggato, non blocca il resto): i conteggi
-  di analytics/cluster restano comunque corretti perchÃ© il messaggio dell'ospite Ã¨ salvato
-  prima della chiamata al modello. Il limite si resetta ogni 24h o passando a un piano a
-  pagamento.
+## English summary
 
----
-
-## âš ï¸ TODO / REMINDER â€” moduli `ingestion` e `rag` da rivedere
-
-I moduli **`backend/app/services/ingestion/`** (conversione â†’ chunking â†’ embedding â†’
-pipeline) e **`backend/app/services/rag/`** (prompt, retrieval, embedding query,
-generation, engine) sono stati creati come **prima versione di prova** per sbloccare
-l'avvio dell'app e far passare i test. **Vanno adattati alle nostre esigenze** prima
-di considerarli definitivi. Punti aperti da rivedere insieme:
-
-- **Prompt RAG** (`rag/prompt.py`): tono, formato della risposta e regole di
-  comportamento sono una bozza â€” affinarli sui casi reali.
-- **Chunking** (`ingestion/chunking.py`): strategia a finestra su caratteri; valutare
-  uno split semantico/per paragrafi e i valori di `CHUNK_SIZE` / `CHUNK_OVERLAP`.
-- **Formati supportati** (`ingestion/conversion.py`): txt/md/csv/html/pdf/docx; OCR
-  non gestito (le immagini sollevano `OCRRequiredError`) â€” decidere se serve.
-- **Embedding / Generation Gemini** (`ingestion/embedding.py`, `rag/generation.py`):
-  modelli, `task_type`, batch size, temperatura e parsing JSON della risposta da
-  validare sul campo (richiedono `GEMINI_API_KEY`).
-- **Retrieval** (`rag/retrieval.py`): scope unitÃ  + struttura via cosine distance;
-  valutare una soglia di similaritÃ  minima e un indice pgvector per le performance.
-
-> Nota: i test che esercitano embedding/generazione "live" restano skippati finchÃ©
-> `GEMINI_API_KEY` non Ã¨ configurata in `backend/.env`.
+*iGuest* is a multilingual RAG chatbot for short-term rental guests, built as a
+course project with a zero budget. Hosts upload a digital manual; guests open a
+unique capability link and ask questions in any language. Answers are generated
+**only** from the property's documents using Google Gemini embeddings and
+`pgvector` retrieval, with dual-scope search (unit + shared structure documents)
+and a cosine-distance cutoff to keep the context relevant. The FastAPI backend,
+React SPA (guest chat, admin panel, host portal) and PostgreSQL run with a single
+`docker compose up`. Demo data, screenshots and the full architecture are
+included; no API keys or personal data are committed.

@@ -50,13 +50,19 @@ def _raise_link_error(exc: LinkError) -> NoReturn:
     raise HTTPException(status_code=status, detail={"code": exc.code, "message": str(exc)})
 
 
-def _is_rate_limited(exc: Exception) -> bool:
-    """True if *exc* is a Gemini rate-limit / quota error (HTTP 429).
+def _is_provider_busy(exc: Exception) -> bool:
+    """True if *exc* is a transient Gemini error (quota or overload).
 
+    Covers rate limiting (429) and the 503/504 the API returns when a model is
+    overloaded; both mean "try again in a moment" rather than a server bug.
     Checked structurally (no hard SDK import) so both the embedding and the
     generation call sites are covered.
     """
-    return getattr(exc, "code", None) == 429 or "RESOURCE_EXHAUSTED" in str(exc)
+    message = str(exc)
+    return getattr(exc, "code", None) in {429, 503, 504} or any(
+        marker in message
+        for marker in ("RESOURCE_EXHAUSTED", "UNAVAILABLE", "DEADLINE_EXCEEDED")
+    )
 
 
 @router.get("/{token}/opening", response_model=OpeningResponse)
@@ -140,7 +146,7 @@ def post_chat(token: str, body: ChatRequest, db: Session = Depends(get_db)):
     except LinkError as exc:
         _raise_link_error(exc)
     except Exception as exc:
-        if _is_rate_limited(exc):
+        if _is_provider_busy(exc):
             # Free-tier quota hit: ask the guest to retry shortly instead of a 500.
             raise HTTPException(
                 status_code=503,

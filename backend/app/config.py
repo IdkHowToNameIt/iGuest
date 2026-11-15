@@ -19,8 +19,11 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     embedding_model: str = "models/gemini-embedding-001"
     embedding_batch_size: int = 100  # texts per Gemini embed_content call
-    generation_model: str = "models/gemini-2.5-flash"  # free-tier friendly
+    generation_model: str = "models/gemini-3.5-flash"  # free-tier friendly
     generation_temperature: float = 0.2  # low â†’ faithful to context, less invention
+
+    # Per-request cap: a slow/overloaded model returns 503/504 instead of stalling
+    generation_timeout_seconds: int = 60
 
     # Chunking
     chunk_size: int = 800       # target characters per chunk
@@ -29,6 +32,8 @@ class Settings(BaseSettings):
     # RAG retrieval
     rag_top_k: int = 10         # chunks fed into the generation prompt (higher = better
                                 # recall, incl. cross-lingual queries on large manuals)
+    rag_max_distance: float = 0.65  # cosine-distance cutoff: farther chunks are noise for
+                                    # the model; 0 disables the filter and keeps the top-k
 
     # FAQ / question analytics (recompute script)
     # Cosine-distance thresholds for the two clustering levels: tighter groups

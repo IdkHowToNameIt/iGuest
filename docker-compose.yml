@@ -44,6 +44,8 @@ services:
       # host virtualenv never shadows the container's system-installed packages.
       - ./backend:/app
       - /app/.venv
+      # Sample manuals for the demo seed (scripts/seed_demo.py), read-only.
+      - ./samples:/samples:ro
 
   frontend:
     build: ./frontend

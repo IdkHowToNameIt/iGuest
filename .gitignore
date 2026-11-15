@@ -1,25 +1,39 @@
-# --- Segreti / ambiente ---
+# --- Secrets / environment ---
+# Never commit real credentials: only the *.example templates are tracked.
 .env
-*.env
+.env.*
 !.env.example
+*.pem
+*.key
 
 # --- Python (backend) ---
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+htmlcov/
 *.log
+
+# --- Runtime data (uploaded avatars / documents live only on your machine) ---
 backend/uploads/
 
 # --- Node / frontend ---
 node_modules/
 dist/
+.vite/
+npm-debug.log*
 
-# --- IDE ---
+# --- IDE / OS ---
 .idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# --- Claude Code (local-machine settings, not shared) ---
+# --- Local agent settings ---
 .claude/settings.local.json
 
-# --- Design references (not part of the repo) ---
-spuntoConcept/
+# --- Screenshot tooling: raw frames are temporary, only final PNG/GIF are kept ---
+docs/screenshots/_raw/

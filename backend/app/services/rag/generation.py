@@ -41,7 +41,12 @@ def generate_answer(prompt: str) -> dict:
         raise RuntimeError(
             "GEMINI_API_KEY is not set — configure it in backend/.env to generate answers."
         )
-    client = genai.Client(api_key=settings.gemini_api_key)
+    # An explicit timeout keeps a slow/overloaded model from stalling the guest
+    # request for minutes (the SDK retries transient errors with backoff).
+    client = genai.Client(
+        api_key=settings.gemini_api_key,
+        http_options=types.HttpOptions(timeout=settings.generation_timeout_seconds * 1000),
+    )
     response = client.models.generate_content(
         model=settings.generation_model,
         contents=prompt,

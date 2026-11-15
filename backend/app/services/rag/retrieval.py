@@ -11,6 +11,7 @@ import uuid
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.models import DocumentChunk
 
 
@@ -24,7 +25,14 @@ def retrieve_chunks(
     """Return the ``top_k`` chunks most similar to ``query_embedding``.
 
     Scope = chunks of this unit OR structure-level chunks of its structure.
+
+    Chunks farther than ``RAG_MAX_DISTANCE`` (cosine distance) are dropped: on a
+    big manual the tail of the top-k is often unrelated text, and feeding it to
+    the model only invites answers stitched together from the wrong sections.
+    Set ``RAG_MAX_DISTANCE=0`` to disable the filter and always take the top-k.
     """
+    distance = DocumentChunk.embedding.cosine_distance(query_embedding)
+
     stmt = (
         select(DocumentChunk)
         .where(
@@ -36,7 +44,9 @@ def retrieve_chunks(
                 ),
             )
         )
-        .order_by(DocumentChunk.embedding.cosine_distance(query_embedding))
+        .order_by(distance)
         .limit(top_k)
     )
+    if settings.rag_max_distance > 0:
+        stmt = stmt.where(distance <= settings.rag_max_distance)
     return list(db.execute(stmt).scalars().all())

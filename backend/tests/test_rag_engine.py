@@ -204,6 +204,14 @@ def test_unknown_unit_raises():
 
 # ── optional live integration test (skipped unless GEMINI_API_KEY is set) ────
 
+def _is_transient_provider_error(exc: Exception) -> bool:
+    """Quota/overload errors say nothing about our code: skip, don't fail."""
+    return getattr(exc, "code", None) in {429, 503, 504} or any(
+        marker in str(exc)
+        for marker in ("RESOURCE_EXHAUSTED", "UNAVAILABLE", "DEADLINE_EXCEEDED")
+    )
+
+
 @pytest.mark.skipif(not os.getenv("GEMINI_API_KEY"), reason="requires GEMINI_API_KEY")
 def test_generation_parsing_live():
     """Sanity check that the real generator returns the expected dict shape.
@@ -216,7 +224,12 @@ def test_generation_parsing_live():
         [ChunkContext(content="Check-in is at 3 PM.")],
         "owner@example.com",
     )
-    result = generate_answer(prompt)
+    try:
+        result = generate_answer(prompt)
+    except Exception as exc:
+        if _is_transient_provider_error(exc):
+            pytest.skip(f"Gemini temporarily unavailable: {str(exc)[:80]}")
+        raise
     assert "answer" in result
     assert "detected_language" in result
 

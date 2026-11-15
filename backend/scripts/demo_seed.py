@@ -44,8 +44,8 @@ def main() -> None:
     parser.add_argument("--document", help="Optional path to a manual to ingest (unit scope)")
     parser.add_argument(
         "--frontend-url",
-        default="http://localhost:5173",
-        help="Frontend origin for the guest link (default: http://localhost:5173)",
+        default="http://localhost:5174",
+        help="Frontend origin for the guest link (default: http://localhost:5174)",
     )
     args = parser.parse_args()
 

@@ -1,7 +1,7 @@
 """
 Opening message + privacy notice for the guest chat.
 
-The opening screen shows, per CLAUDE.md:
+The opening screen shows, per the project rules (docs/ARCHITECTURE.md):
   - a greeting in the structure's country_language,
   - the same greeting in English (shown separately),
   - a note that the bot auto-detects the guest's preferred language,
