@@ -6,8 +6,6 @@ lingua, generata **solo** dal manuale digitale della struttura. Un pannello admi
 gestisce strutture, unità, documenti, link e conversazioni; un portale host dà al
 gestore una vista in sola lettura su documenti, FAQ e analytics.
 
-Progetto realizzato durante un corso di Generative AI / vibe coding, con vincolo
-di **budget zero**: solo strumenti gratuiti e open source.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)
